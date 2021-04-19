@@ -215,6 +215,11 @@ tasks.withType<Test> {
     systemProperty("jdk10Home", rootProject.extra["JDK_10"] as String)
     systemProperty("jdk11Home", rootProject.extra["JDK_11"] as String)
 
+    val installCocoapods = project.findProperty("installCocoapods") as String?
+    if (installCocoapods != null) {
+        systemProperty("installCocoapods", installCocoapods)
+    }
+
     val mavenLocalRepo = project.providers.systemProperty("maven.repo.local").forUseAtConfigurationTime().orNull
     if (mavenLocalRepo != null) {
         systemProperty("maven.repo.local", mavenLocalRepo)
