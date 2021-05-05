@@ -12,12 +12,14 @@ import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFrameworkExtension
 
 open class KotlinMultiplatformExtension(project: Project) :
     KotlinProjectExtension(project),
     KotlinTargetContainerWithPresetFunctions,
     KotlinTargetContainerWithJsPresetFunctions,
-    KotlinTargetContainerWithNativeShortcuts {
+    KotlinTargetContainerWithNativeShortcuts,
+    XCFrameworkExtension {
     override lateinit var presets: NamedDomainObjectCollection<KotlinTargetPreset<*>>
         internal set
 
