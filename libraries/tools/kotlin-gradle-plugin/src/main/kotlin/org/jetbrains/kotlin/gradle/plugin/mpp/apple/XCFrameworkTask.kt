@@ -7,15 +7,17 @@ package org.jetbrains.kotlin.gradle.plugin.mpp.apple
 
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
+import org.jetbrains.kotlin.gradle.tasks.FatFrameworkTask
 import org.jetbrains.kotlin.gradle.tasks.dependsOn
 import org.jetbrains.kotlin.gradle.tasks.locateOrRegisterTask
 import org.jetbrains.kotlin.gradle.tasks.registerTask
 import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
+import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
+import java.io.File
 
 class XCFrameworkConfig internal constructor(
     val name: String,
@@ -66,17 +68,10 @@ private fun Project.registerPackXCFrameworkTask(
     val buildTypeName = buildType.name.toLowerCaseAsciiOnly()
     val taskName = lowerCamelCaseName("pack", xcFrameworkName, buildTypeName, "XCFramework")
 
-    val outputXCFrameworkFile =
-        buildDir
-            .resolve("XCFrameworks")
-            .resolve(buildTypeName)
-            .resolve("$xcFrameworkName.xcframework")
+    val outputDir = buildDir.resolve("XCFrameworks").resolve(buildTypeName).resolve(xcFrameworkName)
+    val outputXCFrameworkFile = outputDir.resolve("$xcFrameworkName.xcframework")
 
-    val deleteTask = registerTask<Delete>(
-        lowerCamelCaseName("delete", xcFrameworkName, buildTypeName, "XCFramework")
-    ) {
-        it.delete.add(outputXCFrameworkFile)
-    }
+    val fatFrameworkTasks = registerFatFrameworkTasks(config, buildType, outputDir)
 
     packXCFrameworkTask(xcFrameworkName).dependsOn(
         registerTask<Task>(taskName) { task ->
@@ -86,7 +81,6 @@ private fun Project.registerPackXCFrameworkTask(
             val typedParts = config.parts.filter { it.buildType == buildType }
 
             task.onlyIf { typedParts.isNotEmpty() }
-            task.dependsOn(deleteTask)
             task.inputs.apply {
                 typedParts.forEach { framework ->
                     task.dependsOn(framework.linkTaskName)
@@ -95,18 +89,76 @@ private fun Project.registerPackXCFrameworkTask(
                 property("frameworkName", xcFrameworkName)
                 property("buildTypeName", buildTypeName)
             }
-            task.outputs.file(outputXCFrameworkFile)
+            task.outputs.dir(outputXCFrameworkFile)
+            task.dependsOn(fatFrameworkTasks)
 
             task.doLast {
-                val cmdArgs = mutableListOf("xcodebuild", "-create-xcframework")
-                typedParts.forEach { framework ->
-                    cmdArgs.add("-framework")
-                    cmdArgs.add(framework.outputFile.path)
-                }
-                cmdArgs.add("-output")
-                cmdArgs.add(outputXCFrameworkFile.path)
-                exec { it.commandLine(cmdArgs) }
+                val preparedFrameworks = selectFatOrRegularFrameworks(typedParts, outputDir)
+                createXCFramework(preparedFrameworks, outputXCFrameworkFile)
             }
         }
     )
+}
+
+private enum class AppleTarget(
+    val targetName: String,
+    val targets: List<KonanTarget>
+) {
+    MACOS_DEVICE("macos", listOf(KonanTarget.MACOS_X64, KonanTarget.MACOS_ARM64)),
+    IPHONE_DEVICE("ios", listOf(KonanTarget.IOS_ARM32, KonanTarget.IOS_ARM64)),
+    IPHONE_SIMULATOR("iosSimulator", listOf(KonanTarget.IOS_X64, KonanTarget.IOS_SIMULATOR_ARM64)),
+    WATCHOS_DEVICE("watchos", listOf(KonanTarget.WATCHOS_ARM32, KonanTarget.WATCHOS_ARM64)),
+    WATCHOS_SIMULATOR("watchosSimulator", listOf(KonanTarget.WATCHOS_X64, KonanTarget.WATCHOS_SIMULATOR_ARM64)),
+    TVOS_DEVICE("tvos", listOf(KonanTarget.TVOS_ARM64)),
+    TVOS_SIMULATOR("tvosSimulator", listOf(KonanTarget.TVOS_X64, KonanTarget.TVOS_SIMULATOR_ARM64))
+}
+
+//see: https://developer.apple.com/forums/thread/666335
+private fun Project.registerFatFrameworkTasks(
+    config: XCFrameworkConfig,
+    buildType: NativeBuildType,
+    workDir: File
+): List<TaskProvider<FatFrameworkTask>> {
+    val xcFrameworkName = config.name
+    val buildTypeName = buildType.name.toLowerCaseAsciiOnly()
+
+    return AppleTarget.values().map { appleTarget ->
+        val taskName = lowerCamelCaseName(
+            "pack",
+            xcFrameworkName,
+            buildTypeName,
+            appleTarget.targetName,
+            "FatFrameworkForXCFramework"
+        )
+        registerTask<FatFrameworkTask>(taskName) { task ->
+            val frameworks = config.parts.filter { it.buildType == buildType && it.konanTarget in appleTarget.targets }
+            if (frameworks.size < 2) return@registerTask
+            task.from(frameworks)
+            task.destinationDir = workDir
+            task.baseName = appleTarget.targetName
+        }
+    }
+}
+
+private fun selectFatOrRegularFrameworks(frameworks: List<Framework>, workDir: File): List<File> =
+    AppleTarget.values().mapNotNull { appleTarget ->
+        val group = frameworks.filter { it.konanTarget in appleTarget.targets }
+        when {
+            group.size == 1 -> group.first().outputFile
+            group.size > 1 -> workDir.resolve(appleTarget.targetName + ".framework")
+            else -> null
+        }
+    }
+
+private fun Project.createXCFramework(frameworks: List<File>, output: File) {
+    if (output.exists()) output.deleteRecursively()
+
+    val cmdArgs = mutableListOf("xcodebuild", "-create-xcframework")
+    frameworks.forEach { framework ->
+        cmdArgs.add("-framework")
+        cmdArgs.add(framework.path)
+    }
+    cmdArgs.add("-output")
+    cmdArgs.add(output.path)
+    exec { it.commandLine(cmdArgs) }
 }
