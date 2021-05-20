@@ -28,31 +28,31 @@ class XCFrameworkIT : BaseGradleIT() {
     )
 
     @Test
-    fun `pack XCFramework for all available ios and watchos targets`() {
+    fun `assemble XCFramework for all available ios and watchos targets`() {
         with(Project("appleXCFramework")) {
-            build("packSharedReleaseXCFramework") {
+            build("assembleSharedReleaseXCFramework") {
                 assertSuccessful()
                 assertTasksExecuted(":shared:linkReleaseFrameworkIosArm64")
                 assertTasksExecuted(":shared:linkReleaseFrameworkIosX64")
                 assertTasksExecuted(":shared:linkReleaseFrameworkWatchosArm32")
                 assertTasksExecuted(":shared:linkReleaseFrameworkWatchosArm64")
                 assertTasksExecuted(":shared:linkReleaseFrameworkWatchosX64")
-                assertTasksExecuted(":shared:packSharedReleaseWatchosFatFrameworkForXCFramework")
-                assertTasksExecuted(":shared:packSharedReleaseXCFramework")
+                assertTasksExecuted(":shared:assembleSharedReleaseWatchosFatFrameworkForXCFramework")
+                assertTasksExecuted(":shared:assembleSharedReleaseXCFramework")
                 assertFileExists("/shared/build/XCFrameworks/release/shared/shared.xcframework")
                 assertFileExists("/shared/build/XCFrameworks/release/shared/watchos.framework")
                 assertFileExists("/shared/build/XCFrameworks/release/shared/watchos.framework.dSYM")
             }
 
-            build("packSharedReleaseXCFramework") {
+            build("assembleSharedReleaseXCFramework") {
                 assertSuccessful()
                 assertTasksUpToDate(":shared:linkReleaseFrameworkIosArm64")
                 assertTasksUpToDate(":shared:linkReleaseFrameworkIosX64")
                 assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosArm32")
                 assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosArm64")
                 assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosX64")
-                assertTasksUpToDate(":shared:packSharedReleaseWatchosFatFrameworkForXCFramework")
-                assertTasksUpToDate(":shared:packSharedReleaseXCFramework")
+                assertTasksUpToDate(":shared:assembleSharedReleaseWatchosFatFrameworkForXCFramework")
+                assertTasksUpToDate(":shared:assembleSharedReleaseXCFramework")
             }
         }
     }
@@ -63,9 +63,9 @@ class XCFrameworkIT : BaseGradleIT() {
             build("tasks") {
                 assertSuccessful()
                 assertTasksNotRegistered(
-                    ":shared:packSharedDebugXCFramework",
-                    ":shared:packSharedReleaseXCFramework",
-                    ":shared:packSharedXCFramework"
+                    ":shared:assembleSharedDebugXCFramework",
+                    ":shared:assembleSharedReleaseXCFramework",
+                    ":shared:assembleSharedXCFramework"
                 )
             }
         }

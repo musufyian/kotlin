@@ -34,49 +34,49 @@ class XCFrameworkConfig internal constructor(
 interface XCFrameworkExtension {
 
     /**
-     * Creates new XCFrameworkConfig and register related tasks for packing.
+     * Creates new XCFrameworkConfig and register related tasks for assembling.
      * Use XCFrameworkConfig.add(framework) for adding frameworks to result bundle.
      */
     fun Project.XCFramework(
         xcFrameworkName: String = "shared"
     ): XCFrameworkConfig {
         val config = XCFrameworkConfig(xcFrameworkName, mutableSetOf())
-        registerPackXCFrameworkTask(config)
+        registerAssembleXCFrameworkTask(config)
         return config
     }
 }
 
-private fun Project.registerPackXCFrameworkTask(
+private fun Project.registerAssembleXCFrameworkTask(
     config: XCFrameworkConfig
 ) {
     NativeBuildType.values().forEach { buildType ->
-        registerPackXCFrameworkTask(config, buildType)
+        registerAssembleXCFrameworkTask(config, buildType)
     }
 }
 
-private fun Project.packXCFrameworkTask(xcFrameworkName: String): TaskProvider<Task> =
-    locateOrRegisterTask(lowerCamelCaseName("pack", xcFrameworkName, "XCFramework")) {
+private fun Project.assembleXCFrameworkTask(xcFrameworkName: String): TaskProvider<Task> =
+    locateOrRegisterTask(lowerCamelCaseName("assemble", xcFrameworkName, "XCFramework")) {
         it.group = "build"
-        it.description = "Pack all types of '$xcFrameworkName' XCFramework"
+        it.description = "Assemble all types of '$xcFrameworkName' XCFramework"
     }
 
-private fun Project.registerPackXCFrameworkTask(
+private fun Project.registerAssembleXCFrameworkTask(
     config: XCFrameworkConfig,
     buildType: NativeBuildType
 ) {
     val xcFrameworkName = config.name
     val buildTypeName = buildType.name.toLowerCaseAsciiOnly()
-    val taskName = lowerCamelCaseName("pack", xcFrameworkName, buildTypeName, "XCFramework")
+    val taskName = lowerCamelCaseName("assemble", xcFrameworkName, buildTypeName, "XCFramework")
 
     val outputDir = buildDir.resolve("XCFrameworks").resolve(buildTypeName).resolve(xcFrameworkName)
     val outputXCFrameworkFile = outputDir.resolve("$xcFrameworkName.xcframework")
 
     val fatFrameworkTasks = registerFatFrameworkTasks(config, buildType, outputDir)
 
-    packXCFrameworkTask(xcFrameworkName).dependsOn(
+    assembleXCFrameworkTask(xcFrameworkName).dependsOn(
         registerTask<Task>(taskName) { task ->
             task.group = "build"
-            task.description = "Pack $buildTypeName '$xcFrameworkName' XCFramework"
+            task.description = "Assemble $buildTypeName '$xcFrameworkName' XCFramework"
 
             val typedParts = config.parts.filter { it.buildType == buildType }
 
@@ -124,7 +124,7 @@ private fun Project.registerFatFrameworkTasks(
 
     return AppleTarget.values().map { appleTarget ->
         val taskName = lowerCamelCaseName(
-            "pack",
+            "assemble",
             xcFrameworkName,
             buildTypeName,
             appleTarget.targetName,
