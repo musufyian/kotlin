@@ -30,29 +30,29 @@ class XCFrameworkIT : BaseGradleIT() {
     @Test
     fun `assemble XCFramework for all available ios and watchos targets`() {
         with(Project("appleXCFramework")) {
-            build("assembleSharedReleaseXCFramework") {
+            build("assembleSdkXCFramework") {
                 assertSuccessful()
-                assertTasksExecuted(":shared:linkReleaseFrameworkIosArm64")
-                assertTasksExecuted(":shared:linkReleaseFrameworkIosX64")
-                assertTasksExecuted(":shared:linkReleaseFrameworkWatchosArm32")
-                assertTasksExecuted(":shared:linkReleaseFrameworkWatchosArm64")
-                assertTasksExecuted(":shared:linkReleaseFrameworkWatchosX64")
-                assertTasksExecuted(":shared:assembleSharedReleaseWatchosFatFrameworkForXCFramework")
-                assertTasksExecuted(":shared:assembleSharedReleaseXCFramework")
-                assertFileExists("/shared/build/XCFrameworks/release/shared/shared.xcframework")
-                assertFileExists("/shared/build/XCFrameworks/release/shared/watchos.framework")
-                assertFileExists("/shared/build/XCFrameworks/release/shared/watchos.framework.dSYM")
+                assertTasksExecuted(":shared:linkDebugFrameworkIosArm64")
+                assertTasksExecuted(":shared:linkDebugFrameworkIosX64")
+                assertTasksExecuted(":shared:linkDebugFrameworkWatchosArm32")
+                assertTasksExecuted(":shared:linkDebugFrameworkWatchosArm64")
+                assertTasksExecuted(":shared:linkDebugFrameworkWatchosX64")
+                assertTasksExecuted(":shared:assembleSdkDebugWatchosFatFrameworkForXCFramework")
+                assertTasksExecuted(":shared:assembleSdkDebugXCFramework")
+                assertFileExists("/shared/build/XCFrameworks/debug/sdk.xcframework")
+                assertFileExists("/shared/build/fat-framework/debug/sdk/watchos.framework")
+                assertFileExists("/shared/build/fat-framework/debug/sdk/watchos.framework.dSYM")
             }
 
-            build("assembleSharedReleaseXCFramework") {
+            build("assembleSdkXCFramework") {
                 assertSuccessful()
-                assertTasksUpToDate(":shared:linkReleaseFrameworkIosArm64")
-                assertTasksUpToDate(":shared:linkReleaseFrameworkIosX64")
-                assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosArm32")
-                assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosArm64")
-                assertTasksUpToDate(":shared:linkReleaseFrameworkWatchosX64")
-                assertTasksUpToDate(":shared:assembleSharedReleaseWatchosFatFrameworkForXCFramework")
-                assertTasksUpToDate(":shared:assembleSharedReleaseXCFramework")
+                assertTasksUpToDate(":shared:linkDebugFrameworkIosArm64")
+                assertTasksUpToDate(":shared:linkDebugFrameworkIosX64")
+                assertTasksUpToDate(":shared:linkDebugFrameworkWatchosArm32")
+                assertTasksUpToDate(":shared:linkDebugFrameworkWatchosArm64")
+                assertTasksUpToDate(":shared:linkDebugFrameworkWatchosX64")
+                assertTasksUpToDate(":shared:assembleSdkDebugWatchosFatFrameworkForXCFramework")
+                assertTasksUpToDate(":shared:assembleSdkDebugXCFramework")
             }
         }
     }
