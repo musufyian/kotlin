@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 import java.io.File
 
 fun Project.XCFramework(
-    xcFrameworkName: String = "shared",
+    xcFrameworkName: String = name,
     buildType: NativeBuildType = NativeBuildType.RELEASE
 ) = registerAssembleXCFrameworkTask(xcFrameworkName, buildType)
 

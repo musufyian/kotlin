@@ -58,6 +58,19 @@ class XCFrameworkIT : BaseGradleIT() {
     }
 
     @Test
+    fun `assemble other XCFramework for ios targets`() {
+        with(Project("appleXCFramework")) {
+            build("assembleSharedXCFramework") {
+                assertSuccessful()
+                assertTasksExecuted(":shared:linkReleaseFrameworkIosArm64")
+                assertTasksExecuted(":shared:linkReleaseFrameworkIosX64")
+                assertTasksExecuted(":shared:assembleSharedReleaseXCFramework")
+                assertFileExists("/shared/build/XCFrameworks/release/shared.xcframework")
+            }
+        }
+    }
+
+    @Test
     fun `check there aren't XCFramework tasks without declaration in build script`() {
         with(Project("sharedAppleFramework")) {
             build("tasks") {
