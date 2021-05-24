@@ -21,14 +21,26 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 import java.io.File
 
-fun Project.XCFramework(
-    xcFrameworkName: String = name,
-    buildType: NativeBuildType = NativeBuildType.RELEASE
-) = registerAssembleXCFrameworkTask(xcFrameworkName, buildType)
-
-fun TaskProvider<AssembleXCFrameworkTask>.add(framework: Framework) {
-    this.get().from(framework)
+class XCFrameworkConfig internal constructor(
+    private val tasks: List<TaskProvider<AssembleXCFrameworkTask>>
+) {
+    /**
+     * Adds the specified frameworks in this XCFramework.
+     */
+    fun add(framework: Framework) {
+        tasks.forEach { taskProvider ->
+            taskProvider.configure { task -> task.from(framework) }
+        }
+    }
 }
+
+fun Project.XCFramework(
+    xcFrameworkName: String = name
+) = XCFrameworkConfig(
+    NativeBuildType.values().map { buildType ->
+        registerAssembleXCFrameworkTask(xcFrameworkName, buildType)
+    }
+)
 
 private fun Project.parentAssembleXCFrameworkTask(xcFrameworkName: String): TaskProvider<Task> =
     locateOrRegisterTask(lowerCamelCaseName("assemble", xcFrameworkName, "XCFramework")) {
@@ -70,9 +82,9 @@ private enum class AppleTarget(
 }
 
 //see: https://developer.apple.com/forums/thread/666335
-private fun Project.registerFatFrameworkTasks(xcFrameworkTaskName: String) {
-    afterEvaluate {
-        tasks.withType<AssembleXCFrameworkTask>().findByName(xcFrameworkTaskName)?.let { xcFrameworkTask ->
+private fun Project.registerFatFrameworkTasks(xcFrameworkTaskName: String) = afterEvaluate {
+    tasks.withType<AssembleXCFrameworkTask>().all { xcFrameworkTask ->
+        if (xcFrameworkTask.name == xcFrameworkTaskName) {
             AppleTarget.values().forEach target@{ appleTarget ->
                 val frameworks = xcFrameworkTask.frameworks.filter { it.konanTarget in appleTarget.targets }
                 if (frameworks.size < 2) return@target
@@ -132,7 +144,7 @@ open class AssembleXCFrameworkTask : DefaultTask() {
     /**
      * A parent directory for the fat frameworks.
      */
-    @get:OutputDirectory
+    @get:Internal  // We take it into account as an input in the buildType and baseName properties.
     val fatFrameworksDir: File
         get() = project.buildDir.resolve("fat-framework").resolve(buildType.name.toLowerCaseAsciiOnly()).resolve(baseName)
 

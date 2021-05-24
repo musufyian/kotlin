@@ -30,7 +30,7 @@ class XCFrameworkIT : BaseGradleIT() {
     @Test
     fun `assemble XCFramework for all available ios and watchos targets`() {
         with(Project("appleXCFramework")) {
-            build("assembleSdkXCFramework") {
+            build("assembleSdkDebugXCFramework") {
                 assertSuccessful()
                 assertTasksExecuted(":shared:linkDebugFrameworkIosArm64")
                 assertTasksExecuted(":shared:linkDebugFrameworkIosX64")
@@ -44,7 +44,7 @@ class XCFrameworkIT : BaseGradleIT() {
                 assertFileExists("/shared/build/fat-framework/debug/sdk/watchos.framework.dSYM")
             }
 
-            build("assembleSdkXCFramework") {
+            build("assembleSdkDebugXCFramework") {
                 assertSuccessful()
                 assertTasksUpToDate(":shared:linkDebugFrameworkIosArm64")
                 assertTasksUpToDate(":shared:linkDebugFrameworkIosX64")
@@ -66,6 +66,10 @@ class XCFrameworkIT : BaseGradleIT() {
                 assertTasksExecuted(":shared:linkReleaseFrameworkIosX64")
                 assertTasksExecuted(":shared:assembleSharedReleaseXCFramework")
                 assertFileExists("/shared/build/XCFrameworks/release/shared.xcframework")
+                assertTasksExecuted(":shared:linkDebugFrameworkIosArm64")
+                assertTasksExecuted(":shared:linkDebugFrameworkIosX64")
+                assertTasksExecuted(":shared:assembleSharedDebugXCFramework")
+                assertFileExists("/shared/build/XCFrameworks/debug/shared.xcframework")
             }
         }
     }
