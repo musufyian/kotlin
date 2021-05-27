@@ -10,6 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.*
+import org.jetbrains.kotlin.gradle.plugin.cocoapods.asValidFrameworkName
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.tasks.*
@@ -18,57 +19,9 @@ import org.jetbrains.kotlin.gradle.tasks.locateOrRegisterTask
 import org.jetbrains.kotlin.gradle.tasks.registerTask
 import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
 import org.jetbrains.kotlin.konan.target.KonanTarget
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 import java.io.File
 
-class XCFrameworkConfig internal constructor(
-    private val tasks: List<TaskProvider<AssembleXCFrameworkTask>>
-) {
-    /**
-     * Adds the specified frameworks in this XCFramework.
-     */
-    fun add(framework: Framework) {
-        tasks.forEach { taskProvider ->
-            taskProvider.configure { task -> task.from(framework) }
-        }
-    }
-}
-
-fun Project.XCFramework(
-    xcFrameworkName: String = name
-) = XCFrameworkConfig(
-    NativeBuildType.values().map { buildType ->
-        registerAssembleXCFrameworkTask(xcFrameworkName, buildType)
-    }
-)
-
-private fun Project.parentAssembleXCFrameworkTask(xcFrameworkName: String): TaskProvider<Task> =
-    locateOrRegisterTask(lowerCamelCaseName("assemble", xcFrameworkName, "XCFramework")) {
-        it.group = "build"
-        it.description = "Assemble all types of registered '$xcFrameworkName' XCFramework"
-    }
-
-private fun Project.registerAssembleXCFrameworkTask(
-    xcFrameworkName: String,
-    buildType: NativeBuildType
-): TaskProvider<AssembleXCFrameworkTask> {
-    require(xcFrameworkName.isNotBlank())
-    val taskName = lowerCamelCaseName(
-        "assemble",
-        xcFrameworkName,
-        buildType.name.toLowerCaseAsciiOnly(),
-        "XCFramework"
-    )
-    val resultTask = registerTask<AssembleXCFrameworkTask>(taskName) { task ->
-        task.baseName = xcFrameworkName
-        task.buildType = buildType
-    }
-    parentAssembleXCFrameworkTask(xcFrameworkName).dependsOn(resultTask)
-    registerFatFrameworkTasks(taskName)
-    return resultTask
-}
-
-private enum class AppleTarget(
+internal enum class AppleTarget(
     val targetName: String,
     val targets: List<KonanTarget>
 ) {
@@ -81,38 +34,118 @@ private enum class AppleTarget(
     TVOS_SIMULATOR("tvosSimulator", listOf(KonanTarget.TVOS_X64, KonanTarget.TVOS_SIMULATOR_ARM64))
 }
 
-//see: https://developer.apple.com/forums/thread/666335
-private fun Project.registerFatFrameworkTasks(xcFrameworkTaskName: String) = afterEvaluate {
-    tasks.withType<AssembleXCFrameworkTask>().all { xcFrameworkTask ->
-        if (xcFrameworkTask.name == xcFrameworkTaskName) {
-            AppleTarget.values().forEach target@{ appleTarget ->
-                val frameworks = xcFrameworkTask.frameworks.filter { it.konanTarget in appleTarget.targets }
-                if (frameworks.size < 2) return@target
-                val taskName = lowerCamelCaseName(
-                    "assemble",
-                    xcFrameworkTask.baseName,
-                    xcFrameworkTask.buildType.name.toLowerCaseAsciiOnly(),
-                    appleTarget.targetName,
-                    "FatFrameworkForXCFramework"
-                )
-                xcFrameworkTask.dependsOn(
-                    registerTask<FatFrameworkTask>(taskName) { task ->
-                        task.from(frameworks)
-                        task.destinationDir = xcFrameworkTask.fatFrameworksDir
-                        task.baseName = appleTarget.targetName
+internal class XCFrameworkTaskHolder(
+    val buildType: NativeBuildType,
+    val task: TaskProvider<XCFrameworkTask>,
+    val fatTasks: Map<AppleTarget, TaskProvider<FatFrameworkTask>>
+) {
+    companion object {
+        fun create(project: Project, xcFrameworkName: String, buildType: NativeBuildType): XCFrameworkTaskHolder {
+
+            val parentTask = project.parentAssembleXCFrameworkTask(xcFrameworkName)
+            val task = project.registerAssembleXCFrameworkTask(xcFrameworkName, buildType)
+            parentTask.dependsOn(task)
+
+            val fatTasks = AppleTarget.values().associate { fatTarget ->
+                val fatTask = project.registerAssembleFatForXCFrameworkTask(xcFrameworkName, buildType, fatTarget)
+                task.dependsOn(fatTask)
+                fatTarget to fatTask
+            }
+
+            return XCFrameworkTaskHolder(buildType, task, fatTasks)
+        }
+    }
+}
+
+class XCFrameworkConfig internal constructor(
+    private val taskHolders: List<XCFrameworkTaskHolder>
+) {
+    /**
+     * Adds the specified frameworks in this XCFramework.
+     */
+    fun add(framework: Framework) {
+        taskHolders.forEach { holder ->
+            if (framework.buildType == holder.buildType) {
+                holder.task.configure { task -> task.from(framework) }
+                AppleTarget.values()
+                    .firstOrNull { it.targets.contains(framework.konanTarget) }
+                    ?.also { appleTarget ->
+                        holder.fatTasks[appleTarget]?.configure { fatTask ->
+                            fatTask.from(framework)
+                        }
                     }
-                )
             }
         }
     }
 }
 
-open class AssembleXCFrameworkTask : DefaultTask() {
+fun Project.XCFramework(
+    xcFrameworkName: String = name
+) = XCFrameworkConfig(
+    NativeBuildType.values().map { buildType ->
+        XCFrameworkTaskHolder.create(this, xcFrameworkName, buildType)
+    }
+)
+
+private fun Project.parentAssembleXCFrameworkTask(xcFrameworkName: String): TaskProvider<Task> =
+    locateOrRegisterTask(lowerCamelCaseName("assemble", xcFrameworkName, "XCFramework")) {
+        it.group = "build"
+        it.description = "Assemble all types of registered '$xcFrameworkName' XCFramework"
+    }
+
+private fun Project.registerAssembleXCFrameworkTask(
+    xcFrameworkName: String,
+    buildType: NativeBuildType
+): TaskProvider<XCFrameworkTask> {
+    require(xcFrameworkName.isNotBlank())
+    val taskName = lowerCamelCaseName(
+        "assemble",
+        xcFrameworkName,
+        buildType.getName(),
+        "XCFramework"
+    )
+    return registerTask(taskName) { task ->
+        task.baseName = xcFrameworkName
+        task.buildType = buildType
+    }
+}
+
+//see: https://developer.apple.com/forums/thread/666335
+private fun Project.registerAssembleFatForXCFrameworkTask(
+    xcFrameworkName: String,
+    buildType: NativeBuildType,
+    appleTarget: AppleTarget
+): TaskProvider<FatFrameworkTask> {
+    val taskName = lowerCamelCaseName(
+        "assemble",
+        xcFrameworkName,
+        buildType.getName(),
+        appleTarget.targetName,
+        "FatFrameworkForXCFramework"
+    )
+
+    return registerTask(taskName) { task ->
+        task.destinationDir = buildDir
+            .resolve("fat-framework")
+            .resolve(buildType.getName())
+            .resolve(xcFrameworkName)
+            .resolve(appleTarget.targetName)
+        task.baseName = xcFrameworkName.asValidFrameworkName() //fixme KT-30805
+        task.onlyIf {
+            task.frameworks.size > 1
+        }
+    }
+}
+
+abstract class XCFrameworkTask : DefaultTask() {
     /**
      * A base name for the XCFramework.
      */
     @Input
-    var baseName: String = "shared"
+    var baseName: String = project.name
+
+    private val xcFrameworkName: String
+        get() = baseName.asValidFrameworkName()
 
     /**
      * A build type of the XCFramework.
@@ -145,12 +178,12 @@ open class AssembleXCFrameworkTask : DefaultTask() {
      * A parent directory for the fat frameworks.
      */
     @get:Internal  // We take it into account as an input in the buildType and baseName properties.
-    val fatFrameworksDir: File
-        get() = project.buildDir.resolve("fat-framework").resolve(buildType.name.toLowerCaseAsciiOnly()).resolve(baseName)
+    protected val fatFrameworksDir: File
+        get() = project.buildDir.resolve("fat-framework").resolve(buildType.getName()).resolve(xcFrameworkName)
 
     @get:OutputDirectory
     protected val outputXCFrameworkFile: File
-        get() = outputDir.resolve(buildType.name.toLowerCaseAsciiOnly()).resolve("$baseName.xcframework")
+        get() = outputDir.resolve(buildType.getName()).resolve("$xcFrameworkName.xcframework")
 
     /**
      * Adds the specified frameworks in this XCFramework.
@@ -161,25 +194,26 @@ open class AssembleXCFrameworkTask : DefaultTask() {
                 "XCFramework supports Apple frameworks only"
             }
             allFrameworks.add(framework)
-            dependsOn(framework.linkTaskName)
+            dependsOn(framework.linkTask)
         }
     }
 
     @TaskAction
     fun assemble() {
-        val preparedFrameworks = selectFatOrRegularFrameworks(frameworks, fatFrameworksDir)
-        createXCFramework(preparedFrameworks, outputXCFrameworkFile)
-    }
-
-    private fun selectFatOrRegularFrameworks(frameworks: List<Framework>, fatFrameworksDir: File): List<File> =
-        AppleTarget.values().mapNotNull { appleTarget ->
+        val frameworksForXCFramework = AppleTarget.values().mapNotNull { appleTarget ->
             val group = frameworks.filter { it.konanTarget in appleTarget.targets }
             when {
-                group.size == 1 -> group.first().outputFile
-                group.size > 1 -> fatFrameworksDir.resolve(appleTarget.targetName + ".framework")
+                group.size == 1 -> {
+                    group.first().outputFile
+                }
+                group.size > 1 -> {
+                    fatFrameworksDir.resolve(appleTarget.targetName).resolve("$xcFrameworkName.framework") //fixme KT-30805
+                }
                 else -> null
             }
         }
+        createXCFramework(frameworksForXCFramework, outputXCFrameworkFile)
+    }
 
     private fun createXCFramework(frameworks: List<File>, output: File) {
         if (output.exists()) output.deleteRecursively()
