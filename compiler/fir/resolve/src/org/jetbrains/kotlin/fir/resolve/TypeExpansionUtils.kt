@@ -22,7 +22,10 @@ import org.jetbrains.kotlin.fir.utils.component2
 
 fun ConeClassLikeType.fullyExpandedType(
     useSiteSession: FirSession,
-    expandedConeType: (FirTypeAlias) -> ConeClassLikeType? = FirTypeAlias::expandedConeType,
+    expandedConeType: (FirTypeAlias, FirSession) -> ConeClassLikeType? = { alias, session ->
+        alias.ensureResolved(FirResolvePhase.SUPER_TYPES, session)
+        alias.expandedConeType
+    },
 ): ConeClassLikeType {
     if (this is ConeClassLikeTypeImpl) {
         val (cachedSession, cachedExpandedType) = cachedExpandedType
@@ -49,7 +52,7 @@ fun ConeKotlinType.fullyExpandedType(
 
 private fun ConeClassLikeType.fullyExpandedTypeNoCache(
     useSiteSession: FirSession,
-    expandedConeType: (FirTypeAlias) -> ConeClassLikeType?,
+    expandedConeType: (FirTypeAlias, FirSession) -> ConeClassLikeType?,
 ): ConeClassLikeType {
     val directExpansionType = directExpansionType(useSiteSession, expandedConeType) ?: return this
     return directExpansionType.fullyExpandedType(useSiteSession, expandedConeType)
@@ -57,12 +60,15 @@ private fun ConeClassLikeType.fullyExpandedTypeNoCache(
 
 fun ConeClassLikeType.directExpansionType(
     useSiteSession: FirSession,
-    expandedConeType: (FirTypeAlias) -> ConeClassLikeType? = FirTypeAlias::expandedConeType,
+    expandedConeType: (FirTypeAlias, FirSession) -> ConeClassLikeType? = { alias, session ->
+        alias.ensureResolved(FirResolvePhase.SUPER_TYPES, session)
+        alias.expandedConeType
+    },
 ): ConeClassLikeType? {
     val typeAliasSymbol = lookupTag.toSymbol(useSiteSession) as? FirTypeAliasSymbol ?: return null
     val typeAlias = typeAliasSymbol.fir
 
-    val resultType = expandedConeType(typeAlias)?.applyNullabilityFrom(useSiteSession, this) ?: return null
+    val resultType = expandedConeType(typeAlias, useSiteSession)?.applyNullabilityFrom(useSiteSession, this) ?: return null
 
     if (resultType.typeArguments.isEmpty()) return resultType
     return mapTypeAliasArguments(typeAlias, this, resultType, useSiteSession) as? ConeClassLikeType
