@@ -25,6 +25,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import org.jetbrains.kotlin.compilerRunner.registerCommonizerClasspathConfigurationIfNecessary
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.logging.kotlinDebug
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
@@ -78,9 +79,7 @@ abstract class KotlinBasePluginWrapper : Plugin<Project> {
         project.configurations.maybeCreate(NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME).apply {
             isTransitive = false
         }
-        project.configurations.maybeCreate(KLIB_COMMONIZER_CLASSPATH_CONFIGURATION_NAME).defaultDependencies {
-            it.add(project.dependencies.create("$KOTLIN_MODULE_GROUP:$KOTLIN_KLIB_COMMONIZER_EMBEDDABLE:$kotlinPluginVersion"))
-        }
+        project.registerCommonizerClasspathConfigurationIfNecessary()
 
         val kotlinGradleBuildServices = KotlinGradleBuildServices.getInstance(project, listenerRegistryHolder)
 
@@ -266,3 +265,4 @@ private fun loadKotlinPluginVersionFromResourcesOf(any: Any) =
 private val kotlinPluginVersionFromResources = lazy {
     loadKotlinPluginVersionFromResourcesOf(object {})
 }
+
