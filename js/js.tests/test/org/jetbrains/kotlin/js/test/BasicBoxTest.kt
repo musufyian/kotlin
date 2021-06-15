@@ -149,6 +149,7 @@ abstract class BasicBoxTest(
         val splitPerModule = SPLIT_PER_MODULE.matcher(fileContent).find()
 
         val propertyLazyInitialization = PROPERTY_LAZY_INITIALIZATION.matcher(fileContent).find()
+        val safeExternalBoolean = SAFE_EXTERNAL_BOOLEAN.matcher(fileContent).find()
 
         TestFileFactoryImpl().use { testFactory ->
             val inputFiles = TestFiles.createTestFiles(
@@ -213,7 +214,8 @@ abstract class BasicBoxTest(
                     skipDceDriven,
                     splitPerModule,
                     errorPolicy,
-                    propertyLazyInitialization
+                    propertyLazyInitialization,
+                    safeExternalBoolean
                 )
 
                 when {
@@ -467,6 +469,7 @@ abstract class BasicBoxTest(
         splitPerModule: Boolean,
         errorIgnorancePolicy: ErrorTolerancePolicy,
         propertyLazyInitialization: Boolean,
+        safeExternalBoolean: Boolean,
     ) {
         val kotlinFiles = module.files.filter { it.fileName.endsWith(".kt") }
         val testFiles = kotlinFiles.map { it.fileName }
@@ -517,6 +520,7 @@ abstract class BasicBoxTest(
             skipDceDriven,
             splitPerModule,
             propertyLazyInitialization,
+            safeExternalBoolean,
         )
 
         if (incrementalCompilationChecksEnabled && module.hasFilesToRecompile) {
@@ -607,10 +611,11 @@ abstract class BasicBoxTest(
             testPackage,
             testFunction,
             needsFullIrRuntime,
-           isMainModule = false,
-           skipDceDriven = true,
-           splitPerModule = false,
+            isMainModule = false,
+            skipDceDriven = true,
+            splitPerModule = false,
             propertyLazyInitialization = false,
+            safeExternalBoolean = false,
         )
 
         val originalOutput = FileUtil.loadFile(outputFile)
@@ -690,6 +695,7 @@ abstract class BasicBoxTest(
         skipDceDriven: Boolean,
         splitPerModule: Boolean,
         propertyLazyInitialization: Boolean,
+        safeExternalBoolean: Boolean,
     ) {
         val translator = K2JSTranslator(config, false)
         val translationResult = translator.translateUnits(ExceptionThrowingReporter, units, mainCallParameters)
@@ -1092,6 +1098,8 @@ abstract class BasicBoxTest(
         private val ERROR_POLICY_PATTERN = Pattern.compile("^// *ERROR_POLICY: *(.+)$", Pattern.MULTILINE)
 
         private val PROPERTY_LAZY_INITIALIZATION = Pattern.compile("^// *PROPERTY_LAZY_INITIALIZATION *$", Pattern.MULTILINE)
+
+        private val SAFE_EXTERNAL_BOOLEAN = Pattern.compile("^// *SAFE_EXTERNAL_BOOLEAN *$", Pattern.MULTILINE)
 
         @JvmStatic
         protected val runTestInNashorn = getBoolean("kotlin.js.useNashorn")
