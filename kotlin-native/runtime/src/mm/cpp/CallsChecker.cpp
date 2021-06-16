@@ -256,7 +256,13 @@ public:
         return false;
     }
 
-    ~KnownFunctionChecker() { recursiveCallGuard = true; }
+    ~KnownFunctionChecker() {
+        /*
+         * destroying unordered_map will call checker function, but it will not work,
+         * because this object is destroying. So, let's just disable it.
+         */
+        recursiveCallGuard = true;
+    }
 };
 
 thread_local KnownFunctionChecker checker;
