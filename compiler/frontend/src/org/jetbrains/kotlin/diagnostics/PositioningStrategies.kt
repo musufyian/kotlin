@@ -363,7 +363,8 @@ object PositioningStrategies {
     val LATEINIT_MODIFIER: PositioningStrategy<KtModifierListOwner> = modifierSetPosition(KtTokens.LATEINIT_KEYWORD)
 
     @JvmField
-    val VARIANCE_MODIFIER: PositioningStrategy<KtModifierListOwner> = modifierSetPosition(KtTokens.IN_KEYWORD, KtTokens.OUT_KEYWORD)
+    val VARIANCE_MODIFIER: PositioningStrategy<KtModifierListOwner> =
+        modifierSetPosition(KtTokens.IN_KEYWORD, KtTokens.OUT_KEYWORD, starAsModifier = true)
 
     @JvmField
     val CONST_MODIFIER: PositioningStrategy<KtModifierListOwner> = modifierSetPosition(KtTokens.CONST_KEYWORD)
@@ -403,9 +404,16 @@ object PositioningStrategies {
     }
 
     @JvmStatic
-    fun modifierSetPosition(vararg tokens: KtModifierKeywordToken): PositioningStrategy<KtModifierListOwner> {
+    fun modifierSetPosition(
+        vararg tokens: KtModifierKeywordToken,
+        starAsModifier: Boolean = false
+    ): PositioningStrategy<KtModifierListOwner> {
         return object : PositioningStrategy<KtModifierListOwner>() {
             override fun mark(element: KtModifierListOwner): List<TextRange> {
+                if (starAsModifier && element is KtTypeProjection && element.projectionKind == KtProjectionKind.STAR) {
+                    return markElement(element)
+                }
+
                 val modifierList = element.modifierList.sure { "No modifier list, but modifier has been found by the analyzer" }
 
                 for (token in tokens) {

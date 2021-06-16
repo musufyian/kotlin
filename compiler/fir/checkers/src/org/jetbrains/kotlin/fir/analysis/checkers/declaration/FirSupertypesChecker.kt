@@ -7,7 +7,9 @@ package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.analysis.checkers.extractTypeRefAndSourceFromTypeArgument
 import org.jetbrains.kotlin.fir.analysis.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
 import org.jetbrains.kotlin.fir.analysis.diagnostics.reportOn
@@ -15,12 +17,10 @@ import org.jetbrains.kotlin.fir.analysis.diagnostics.withSuppressedDiagnostics
 import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.modality
+import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
-import org.jetbrains.kotlin.fir.types.ConeClassLikeType
-import org.jetbrains.kotlin.fir.types.ConeNullability
-import org.jetbrains.kotlin.fir.types.coneType
-import org.jetbrains.kotlin.fir.types.isExtensionFunctionType
+import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 object FirSupertypesChecker : FirClassChecker() {
@@ -81,6 +81,35 @@ object FirSupertypesChecker : FirClassChecker() {
                     }
                 }
             }
+
+            val coneType = superTypeRef.coneType
+            if (coneType.typeArguments.isNotEmpty()) {
+                for ((index, typeArgument) in coneType.typeArguments.withIndex()) {
+                    if (typeArgument.isConflictingOrNotInvariant) {
+                        val (_, argSource) = extractTypeRefAndSourceFromTypeArgument(superTypeRef, index) ?: continue
+                        reporter.reportOn(
+                            argSource ?: superTypeRef.source,
+                            FirErrors.PROJECTION_IN_IMMEDIATE_ARGUMENT_TO_SUPERTYPE,
+                            context
+                        )
+                    }
+                }
+            } else {
+                val fullyExpandedType = coneType.fullyExpandedType(context.session)
+                if (isInterface(fullyExpandedType, context.session)) {
+                    for (typeArgument in fullyExpandedType.typeArguments) {
+                        if (typeArgument.isConflictingOrNotInvariant) {
+                            reporter.reportOn(superTypeRef.source, FirErrors.EXPANDED_TYPE_CANNOT_BE_INHERITED, coneType, context)
+                            break
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    fun isInterface(type: ConeKotlinType, session: FirSession): Boolean {
+        val symbol = type.toSymbol(session)
+        return symbol is FirRegularClassSymbol && symbol.fir.classKind == ClassKind.INTERFACE
     }
 }

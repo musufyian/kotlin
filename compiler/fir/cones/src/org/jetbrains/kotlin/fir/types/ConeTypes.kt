@@ -20,6 +20,8 @@ enum class ProjectionKind {
 sealed class ConeTypeProjection : TypeArgumentMarker {
     abstract val kind: ProjectionKind
 
+    val isConflictingOrNotInvariant: Boolean get() = kind != ProjectionKind.INVARIANT || this is ConeKotlinTypeConflictingProjection
+
     companion object {
         val EMPTY_ARRAY = arrayOf<ConeTypeProjection>()
     }

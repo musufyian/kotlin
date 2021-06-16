@@ -81,7 +81,7 @@ object FirProjectionRelationChecker : FirBasicDeclarationChecker() {
 
             if (projectionRelation != ProjectionRelation.None && typeRef.source?.kind !is FirFakeSourceElementKind) {
                 reporter.reportOn(
-                    typeArgSource ?: typeArgTypeRef.source,
+                    typeArgSource ?: typeArgTypeRef?.source,
                     if (projectionRelation == ProjectionRelation.Conflicting)
                         if (type != fullyExpandedType) FirErrors.CONFLICTING_PROJECTION_IN_TYPEALIAS_EXPANSION else FirErrors.CONFLICTING_PROJECTION
                     else
@@ -91,7 +91,9 @@ object FirProjectionRelationChecker : FirBasicDeclarationChecker() {
                 )
             }
 
-            checkTypeRef(typeArgTypeRef, context, reporter)
+            if (typeArgTypeRef != null) {
+                checkTypeRef(typeArgTypeRef, context, reporter)
+            }
         }
     }
 
