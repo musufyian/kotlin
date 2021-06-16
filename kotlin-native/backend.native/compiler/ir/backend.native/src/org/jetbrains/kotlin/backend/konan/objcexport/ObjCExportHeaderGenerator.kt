@@ -1032,8 +1032,10 @@ abstract class ObjCExportHeaderGenerator internal constructor(
         }
         add("")
 
+        // If _Nullable_result is not supported, then use _Nullable:
         add("#pragma push_macro(\"$objcNullableResultAttribute\")")
-        add("#if !__has_feature(nullability_nullable_result) && !defined($objcNullableResultAttribute)")
+        add("#if !__has_feature(nullability_nullable_result)")
+        add("#undef $objcNullableResultAttribute")
         add("#define $objcNullableResultAttribute $objcNullableAttribute")
         add("#endif")
         add("")
