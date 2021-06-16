@@ -30,11 +30,10 @@ import org.jetbrains.kotlin.descriptors.konan.DeserializedKlibModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.isNativeStdlib
 import org.jetbrains.kotlin.descriptors.konan.klibModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.kotlinLibrary
+import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.builders.TranslationPluginContext
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrFileImpl
-import org.jetbrains.kotlin.ir.descriptors.IrAbstractFunctionFactory
-import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrPublicSymbolBase
 import org.jetbrains.kotlin.ir.types.classOrNull
@@ -67,7 +66,6 @@ object KonanFakeOverrideClassFilter : FakeOverrideClassFilter {
 
 internal class KonanIrLinker(
         private val currentModule: ModuleDescriptor,
-        override val functionalInterfaceFactory: IrAbstractFunctionFactory,
         override val translationPluginContext: TranslationPluginContext?,
         messageLogger: IrMessageLogger,
         builtIns: IrBuiltIns,

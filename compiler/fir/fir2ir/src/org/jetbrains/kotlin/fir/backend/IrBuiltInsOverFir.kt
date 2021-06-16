@@ -306,7 +306,7 @@ class IrBuiltInsOverFir(
         )
     }
 
-    override val primitiveArrays get() = primitiveArraysToPrimitiveTypes.keys
+    override val primitiveTypesToPrimitiveArrays get() = primitiveArraysToPrimitiveTypes.map { (k, v) -> v to k }.toMap()
     override val primitiveArrayElementTypes get() = primitiveArraysToPrimitiveTypes.mapValues { primitiveTypeToIrType[it.value] }
     override val primitiveArrayForType get() = primitiveArrayElementTypes.asSequence().associate { it.value to it.key }
 
@@ -404,10 +404,11 @@ class IrBuiltInsOverFir(
         }
     }
 
-    override val unsignedArrays: Set<IrClassSymbol> by lazy {
-        UnsignedType.values().mapNotNullTo(mutableSetOf()) { unsignedType ->
-            referenceClassByClassId(unsignedType.arrayClassId)
-        }
+    override val unsignedTypesToUnsignedArrays: Map<UnsignedType, IrClassSymbol> by lazy {
+        UnsignedType.values().mapNotNull { unsignedType ->
+            val array = referenceClassByClassId(unsignedType.arrayClassId)
+            if (array == null) null else unsignedType to array
+        }.toMap()
     }
 
     override fun getKPropertyClass(mutable: Boolean, n: Int): IrClassSymbol = when (n) {
@@ -523,8 +524,14 @@ class IrBuiltInsOverFir(
     override fun findFunctions(name: Name, vararg packageNameSegments: String): Iterable<IrSimpleFunctionSymbol> =
         findFunctions(FqName.fromSegments(packageNameSegments.asList()), name)
 
+    override fun findFunctions(name: Name, packageFqName: FqName): Iterable<IrSimpleFunctionSymbol> =
+        findFunctions(packageFqName, name)
+
     override fun findClass(name: Name, vararg packageNameSegments: String): IrClassSymbol? =
         referenceClassByFqname(FqName.fromSegments(packageNameSegments.asList()), name)
+
+    override fun findClass(name: Name, packageFqName: FqName): IrClassSymbol? =
+        referenceClassByFqname(packageFqName, name)
 
     private val builtInClasses by lazy {
         setOf(anyClass)

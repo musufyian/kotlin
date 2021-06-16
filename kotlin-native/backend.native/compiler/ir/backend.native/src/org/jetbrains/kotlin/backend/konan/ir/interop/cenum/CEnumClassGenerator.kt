@@ -153,8 +153,7 @@ internal class CEnumClassGenerator(
 
     private fun createEnumPrimaryConstructor(descriptor: ClassDescriptor): IrConstructor {
         val irConstructor = createConstructor(descriptor.unsubstitutedPrimaryConstructor!!)
-        val enumConstructor = context.builtIns.enum.constructors.single()
-        val constructorSymbol = symbolTable.referenceConstructor(enumConstructor)
+        val enumConstructor = context.irBuiltIns.enumClass.constructors.single()
         val classSymbol = symbolTable.referenceClass(descriptor)
         val type = descriptor.defaultType.toIrType()
         postLinkageSteps.add {
@@ -163,9 +162,9 @@ internal class CEnumClassGenerator(
                         +IrEnumConstructorCallImpl(
                                 startOffset, endOffset,
                                 context.irBuiltIns.unitType,
-                                constructorSymbol,
+                                enumConstructor,
                                 typeArgumentsCount = 1, // kotlin.Enum<T> has a single type parameter.
-                                valueArgumentsCount = constructorSymbol.owner.valueParameters.size
+                                valueArgumentsCount = enumConstructor.owner.valueParameters.size
                         ).apply {
                             putTypeArgument(0, type)
                         }

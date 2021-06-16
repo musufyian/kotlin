@@ -16,8 +16,8 @@ import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.*
-import org.jetbrains.kotlin.ir.descriptors.IrAbstractFunctionFactory
 import org.jetbrains.kotlin.ir.IrBuiltIns
+import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.linkage.IrProvider
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -40,7 +40,7 @@ internal class BuiltInFictitiousFunctionIrClassFactory(
         var symbolTable: SymbolTable?,
         private val irBuiltIns: IrBuiltIns,
         private val reflectionTypes: KonanReflectionTypes
-) : IrAbstractFunctionFactory(), IrProvider {
+) : IrProvider {
 
     override fun getDeclaration(symbol: IrSymbol) =
             (symbol.descriptor as? FunctionClassDescriptor)?.let { descriptor ->
@@ -65,46 +65,19 @@ internal class BuiltInFictitiousFunctionIrClassFactory(
     class FunctionalInterface(val irClass: IrClass, val descriptor: FunctionClassDescriptor, val arity: Int)
 
     fun buildAllClasses() {
-        val maxArity = 255 // See [BuiltInFictitiousFunctionClassFactory].
-        (0 .. maxArity).forEach { arity ->
-            functionN(arity)
-            kFunctionN(arity)
-            suspendFunctionN(arity)
-            kSuspendFunctionN(arity)
-        }
+        // TODO find out whether and how to do it with the new builtins
+//        val maxArity = 255 // See [BuiltInFictitiousFunctionClassFactory].
+//        (0 .. maxArity).forEach { arity ->
+//            functionN(arity)
+//            kFunctionN(arity)
+//            suspendFunctionN(arity)
+//            kSuspendFunctionN(arity)
+//        }
     }
 
-    override fun functionClassDescriptor(arity: Int): FunctionClassDescriptor =
-            irBuiltIns.builtIns.getFunction(arity) as FunctionClassDescriptor
+    private val functionSymbol = irBuiltIns.findClass(KonanFqNames.function.shortName(), KonanFqNames.function.parent())!!
 
-    override fun kFunctionClassDescriptor(arity: Int): FunctionClassDescriptor =
-            reflectionTypes.getKFunction(arity) as FunctionClassDescriptor
-
-    override fun suspendFunctionClassDescriptor(arity: Int): FunctionClassDescriptor =
-            irBuiltIns.builtIns.getSuspendFunction(arity) as FunctionClassDescriptor
-
-    override fun kSuspendFunctionClassDescriptor(arity: Int): FunctionClassDescriptor =
-            reflectionTypes.getKSuspendFunction(arity) as FunctionClassDescriptor
-
-    override fun functionN(arity: Int, declarator: SymbolTable.((IrClassSymbol) -> IrClass) -> IrClass): IrClass =
-            buildClass(irBuiltIns.builtIns.getFunction(arity) as FunctionClassDescriptor, declarator)
-
-    override fun kFunctionN(arity: Int, declarator: SymbolTable.((IrClassSymbol) -> IrClass) -> IrClass): IrClass =
-            buildClass(reflectionTypes.getKFunction(arity) as FunctionClassDescriptor, declarator)
-
-    override fun suspendFunctionN(arity: Int, declarator: SymbolTable.((IrClassSymbol) -> IrClass) -> IrClass): IrClass =
-            buildClass(irBuiltIns.builtIns.getSuspendFunction(arity) as FunctionClassDescriptor, declarator)
-
-    override fun kSuspendFunctionN(arity: Int, declarator: SymbolTable.((IrClassSymbol) -> IrClass) -> IrClass): IrClass =
-            buildClass(reflectionTypes.getKSuspendFunction(arity) as FunctionClassDescriptor, declarator)
-
-    private val functionSymbol = symbolTable!!.referenceClass(
-            irBuiltIns.builtIns.builtInsModule.findClassAcrossModuleDependencies(
-                    ClassId.topLevel(KonanFqNames.function))!!)
-
-    private val kFunctionSymbol = symbolTable!!.referenceClass(
-            irBuiltIns.builtIns.builtInsModule.findClassAcrossModuleDependencies(
-                    ClassId.topLevel(KonanFqNames.kFunction))!!)
+    private val kFunctionSymbol = irBuiltIns.findClass(KonanFqNames.kFunction.shortName(), KonanFqNames.kFunction.parent())!!
 
     private val filesMap = mutableMapOf<PackageFragmentDescriptor, IrFile>()
 
@@ -154,7 +127,8 @@ internal class BuiltInFictitiousFunctionIrClassFactory(
     }
 
     private fun createIrClass(symbol: IrClassSymbol, descriptor: ClassDescriptor): IrClass =
-        IrFactoryImpl.createIrClassFromDescriptor(offset, offset, DECLARATION_ORIGIN_FUNCTION_CLASS, symbol, descriptor)
+            // TODO: find out what to do with offsets
+        IrFactoryImpl.createIrClassFromDescriptor(UNDEFINED_OFFSET, UNDEFINED_OFFSET, DECLARATION_ORIGIN_FUNCTION_CLASS, symbol, descriptor)
 
     private fun createClass(descriptor: FunctionClassDescriptor, declarator: SymbolTable.((IrClassSymbol) -> IrClass) -> IrClass): IrClass =
         symbolTable?.declarator { createIrClass(it, descriptor) }
@@ -350,5 +324,11 @@ internal class BuiltInFictitiousFunctionIrClassFactory(
         }
 
         declarations += fakeOverrideDescriptors.map { createFakeOverride(it) }
+    }
+
+    companion object {
+        val classOrigin = object : IrDeclarationOriginImpl("FUNCTION_INTERFACE_CLASS") {}
+        val memberOrigin = object : IrDeclarationOriginImpl("FUNCTION_INTERFACE_MEMBER") {}
+        const val offset = SYNTHETIC_OFFSET
     }
 }

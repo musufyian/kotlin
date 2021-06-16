@@ -210,7 +210,7 @@ class ES6AddInternalParametersToConstructorPhase(val context: JsIrBackendContext
     }
 
     private fun IrConstructor.hasStrictSignature(): Boolean {
-        val primitives = with(context.irBuiltIns) { primitiveArrays + stringClass }
+        val primitives = with(context.irBuiltIns) { primitiveTypesToPrimitiveArrays.values + stringClass }
         return with(parentAsClass) { isExternal || isInline || symbol in primitives }
     }
 }

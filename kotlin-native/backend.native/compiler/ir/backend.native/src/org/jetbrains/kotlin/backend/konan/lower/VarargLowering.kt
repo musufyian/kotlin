@@ -211,7 +211,7 @@ internal class VarargInjectionLowering constructor(val context: KonanBackendCont
             singleOrNull { it.name == KonanNameConventions.setWithoutBC } ?: single { it.name == OperatorNameConventions.SET }
         }
         val sizeGetterSymbol = arraySymbol.getPropertyGetter("size")!!
-        val copyIntoSymbol = symbols.copyInto[arraySymbol.descriptor]!!
+        val copyIntoSymbol = symbols.copyInto[arraySymbol]!!
         protected val singleParameterConstructor =
             arraySymbol.owner.constructors.find { it.valueParameters.size == 1 }!!
 
@@ -228,7 +228,7 @@ internal class VarargInjectionLowering constructor(val context: KonanBackendCont
     }
 
     inner class PrimitiveArrayHandle(primitiveType: PrimitiveType)
-        : ArrayHandle(symbols.primitiveArrays[primitiveType]!!) {
+        : ArrayHandle(symbols.irBuiltIns.primitiveTypesToPrimitiveArrays[primitiveType]!!) {
 
         override fun createArray(builder: IrBuilderWithScope, elementType: IrType, size: IrExpression): IrExpression {
             return builder.irCall(singleParameterConstructor).apply {

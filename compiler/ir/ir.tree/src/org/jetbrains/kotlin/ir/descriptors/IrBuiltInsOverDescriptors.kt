@@ -321,13 +321,14 @@ class IrBuiltInsOverDescriptors(
     override val booleanArray = builtIns.getPrimitiveArrayClassDescriptor(PrimitiveType.BOOLEAN).toIrSymbol()
 
     override val primitiveArraysToPrimitiveTypes = PrimitiveType.values().associate { builtIns.getPrimitiveArrayClassDescriptor(it).toIrSymbol() to it }
-    override val primitiveArrays = primitiveArraysToPrimitiveTypes.keys
+    override val primitiveTypesToPrimitiveArrays = primitiveArraysToPrimitiveTypes.map { (k, v) -> v to k }.toMap()
     override val primitiveArrayElementTypes = primitiveArraysToPrimitiveTypes.mapValues { primitiveTypeToIrType[it.value] }
     override val primitiveArrayForType = primitiveArrayElementTypes.asSequence().associate { it.value to it.key }
 
-    override val unsignedArrays: Set<IrClassSymbol> = UnsignedType.values().mapNotNullTo(mutableSetOf()) { unsignedType ->
-        builtIns.builtInsModule.findClassAcrossModuleDependencies(unsignedType.arrayClassId)?.toIrSymbol()
-    }
+    override val unsignedTypesToUnsignedArrays: Map<UnsignedType, IrClassSymbol> = UnsignedType.values().mapNotNull { unsignedType ->
+        val array = builtIns.builtInsModule.findClassAcrossModuleDependencies(unsignedType.arrayClassId)?.toIrSymbol()
+        if (array == null) null else unsignedType to array
+    }.toMap()
 
     override val lessFunByOperandType = primitiveIrTypesWithComparisons.defineComparisonOperatorForEachIrType(BuiltInOperatorNames.LESS)
     override val lessOrEqualFunByOperandType = primitiveIrTypesWithComparisons.defineComparisonOperatorForEachIrType(BuiltInOperatorNames.LESS_OR_EQUAL)
@@ -390,8 +391,19 @@ class IrBuiltInsOverDescriptors(
             symbolTable.referenceSimpleFunction(it)
         }
 
+    override fun findFunctions(name: Name, packageFqName: FqName): Iterable<IrSimpleFunctionSymbol> =
+        builtIns.builtInsModule.getPackage(packageFqName).memberScope.getContributedFunctions(name, NoLookupLocation.FROM_BACKEND).map {
+            symbolTable.referenceSimpleFunction(it)
+        }
+
     override fun findClass(name: Name, vararg packageNameSegments: String): IrClassSymbol? =
         (builtInsPackage(*packageNameSegments).getContributedClassifier(
+            name,
+            NoLookupLocation.FROM_BACKEND
+        ) as? ClassDescriptor)?.let { symbolTable.referenceClass(it) }
+
+    override fun findClass(name: Name, packageFqName: FqName): IrClassSymbol? =
+        (builtIns.builtInsModule.getPackage(packageFqName).memberScope.getContributedClassifier(
             name,
             NoLookupLocation.FROM_BACKEND
         ) as? ClassDescriptor)?.let { symbolTable.referenceClass(it) }
