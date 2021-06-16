@@ -28,10 +28,7 @@ mm::ThreadRegistry::Node* mm::ThreadRegistry::RegisterCurrentThread() noexcept {
 
 void mm::ThreadRegistry::Unregister(Node* threadDataNode) noexcept {
     list_.Erase(threadDataNode);
-    // Touch `currentThreadData_` only in main thread as otherwise TLS may already have been deallocated.
-    if (pthread_main_np()) {
-        currentThreadDataNode_ = nullptr;
-    }
+    // Do not touch `currentThreadData_` as TLS may already have been deallocated.
 }
 
 mm::ThreadRegistry::Iterable mm::ThreadRegistry::Iter() noexcept {
