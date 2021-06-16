@@ -633,10 +633,14 @@ internal class ObjCExportTranslatorImpl(
                         ObjCPointerType(ObjCNullableReferenceType(ObjCClassType("NSError")), nullable = true)
 
                     MethodBridgeValueParameter.SuspendCompletion -> {
+                        val resultType = when (val it = mapReferenceType(method.returnType!!, objCExportScope)) {
+                            is ObjCNonNullReferenceType -> ObjCNullableReferenceType(it, isNullableResult = false)
+                            is ObjCNullableReferenceType -> ObjCNullableReferenceType(it.nonNullType, isNullableResult = true)
+                        }
                         ObjCBlockPointerType(
                                 returnType = ObjCVoidType,
                                 parameterTypes = listOf(
-                                        mapReferenceType(method.returnType!!, objCExportScope).makeNullable(),
+                                        resultType,
                                         ObjCNullableReferenceType(ObjCClassType("NSError"))
                                 )
                         )
@@ -1028,11 +1032,18 @@ abstract class ObjCExportHeaderGenerator internal constructor(
         }
         add("")
 
+        add("#pragma push_macro(\"$objcNullableResultAttribute\")")
+        add("#if !__has_feature(nullability_nullable_result) && !defined($objcNullableResultAttribute)")
+        add("#define $objcNullableResultAttribute $objcNullableAttribute")
+        add("#endif")
+        add("")
+
         stubs.forEach {
             addAll(StubRenderer.render(it, shouldExportKDoc))
             add("")
         }
 
+        add("#pragma pop_macro(\"$objcNullableResultAttribute\")")
         add("#pragma clang diagnostic pop")
         add("NS_ASSUME_NONNULL_END")
     }
