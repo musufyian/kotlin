@@ -134,6 +134,8 @@ open class PodspecTask : DefaultTask() {
                 $dependencies
                 |
                 |    spec.pod_target_xcconfig = {
+                |        'KOTLIN_PROJECT_PATH' => '${project.path}',
+                |        'PRODUCT_MODULE_NAME' => '$specName',
                 |        'KOTLIN_TARGET[sdk=iphonesimulator*]' => 'ios_x64',
                 |        'KOTLIN_TARGET[sdk=iphoneos*]' => '$KOTLIN_TARGET_FOR_IOS_DEVICE',
                 |        'KOTLIN_TARGET[sdk=watchsimulator*]' => 'watchos_x64',
@@ -149,9 +151,13 @@ open class PodspecTask : DefaultTask() {
                 |            :execution_position => :before_compile,
                 |            :shell_path => '/bin/sh',
                 |            :script => <<-SCRIPT
+                |                if [ "YES" = "${'$'}COCOAPODS_SKIP_KOTLIN_BUILD" ]; then
+                |                  echo "Skipping Gradle build task invocation due to COCOAPODS_SKIP_KOTLIN_BUILD environment variable set to \"YES\""
+                |                  exit 0
+                |                fi
                 |                set -ev
                 |                REPO_ROOT="${'$'}PODS_TARGET_SRCROOT"
-                |                "$gradleCommand" -p "${'$'}REPO_ROOT" $syncTask \
+                |                "$gradleCommand" -p "${'$'}REPO_ROOT" ${'$'}KOTLIN_PROJECT_PATH:$SYNC_TASK_NAME \
                 |                    -P${KotlinCocoapodsPlugin.TARGET_PROPERTY}=${'$'}KOTLIN_TARGET \
                 |                    -P${KotlinCocoapodsPlugin.CONFIGURATION_PROPERTY}=${'$'}CONFIGURATION \
                 |                    -P${KotlinCocoapodsPlugin.CFLAGS_PROPERTY}="${'$'}OTHER_CFLAGS" \
