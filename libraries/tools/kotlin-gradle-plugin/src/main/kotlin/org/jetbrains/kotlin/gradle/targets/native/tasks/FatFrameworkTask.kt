@@ -153,11 +153,12 @@ open class FatFrameworkTask : DefaultTask() {
             require(archToFramework.all { it.value.isStatic == framework.isStatic }) {
                 fun Framework.staticOrDynamic(): String = if (isStatic) "static" else "dynamic"
 
-                var message = "Cannot create a fat framework from:\n"
-                archToFramework.forEach { message += "${it.value.baseName} - ${it.key.name.toLowerCase()} - ${it.value.staticOrDynamic()}\n" }
-                message += "${framework.baseName} - ${arch.name.toLowerCase()} - ${framework.staticOrDynamic()}\n"
-                message += "All input frameworks must be either static or dynamic"
-                message
+                buildString {
+                    append("Cannot create a fat framework from:\n")
+                    archToFramework.forEach { append("${it.value.baseName} - ${it.key.name.toLowerCase()} - ${it.value.staticOrDynamic()}\n") }
+                    append("${framework.baseName} - ${arch.name.toLowerCase()} - ${framework.staticOrDynamic()}\n")
+                    append("All input frameworks must be either static or dynamic")
+                }
             }
 
             archToFramework[arch] = framework
