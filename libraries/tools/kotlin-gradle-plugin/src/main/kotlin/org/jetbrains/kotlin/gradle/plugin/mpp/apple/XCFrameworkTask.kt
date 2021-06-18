@@ -130,7 +130,7 @@ private fun Project.registerAssembleFatForXCFrameworkTask(
             .resolve(buildType.getName())
             .resolve(xcFrameworkName)
             .resolve(appleTarget.targetName)
-        task.baseName = xcFrameworkName.asValidFrameworkName() //fixme KT-30805
+        task.baseName = xcFrameworkName.asValidFrameworkName()
         task.onlyIf {
             task.frameworks.size > 1
         }
