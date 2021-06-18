@@ -22,6 +22,7 @@ import com.intellij.util.io.EnumeratorStringDescriptor
 import com.intellij.util.io.IOUtil
 import com.intellij.util.io.KeyDescriptor
 import org.jetbrains.kotlin.cli.common.CompilerSystemProperties
+import org.jetbrains.kotlin.cli.common.toBooleanLenient
 import java.io.DataInput
 import java.io.DataInputStream
 import java.io.DataOutput
@@ -51,7 +52,7 @@ object LookupSymbolKeyDescriptor : KeyDescriptor<LookupSymbolKey> {
         }
     }
 
-    private val storeFullFqName = CompilerSystemProperties.COMPILE_INCREMENTAL_WITH_CLASSPATH_SHAPSHOTS.toBooleanLenient()
+    private val storeFullFqName = CompilerSystemProperties.COMPILE_INCREMENTAL_WITH_CLASSPATH_SHAPSHOTS.value.toBooleanLenient() ?: false
 
     override fun save(output: DataOutput, value: LookupSymbolKey) {
         if (storeFullFqName) {
