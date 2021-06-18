@@ -169,7 +169,7 @@ fun ConeClassLikeType.wrapSubstitutionScopeIfNeed(
 private fun ConeClassLikeType.computePartialExpansion(
     useSiteSession: FirSession,
     supertypeSupplier: SupertypeSupplier
-): ConeClassLikeType = fullyExpandedType(useSiteSession, supertypeSupplier::expansionForTypeAlias)
+): ConeClassLikeType = fullyExpandedType(useSiteSession) { supertypeSupplier.expansionForTypeAlias(it, useSiteSession) }
 
 private fun FirClassifierSymbol<*>.collectSuperTypes(
     list: MutableList<ConeClassLikeType>,
@@ -220,8 +220,10 @@ private fun FirClassifierSymbol<*>.collectSuperTypes(
                 }
         }
         is FirTypeAliasSymbol -> {
-            val expansion =
-                supertypeSupplier.expansionForTypeAlias(fir, useSiteSession)?.computePartialExpansion(useSiteSession, supertypeSupplier) ?: return
+            val expansion = supertypeSupplier
+                .expansionForTypeAlias(fir, useSiteSession)
+                ?.computePartialExpansion(useSiteSession, supertypeSupplier)
+                ?: return
             expansion.lookupTag.toSymbol(useSiteSession)
                 ?.collectSuperTypes(list, visitedSymbols, deep, lookupInterfaces, substituteSuperTypes, useSiteSession, supertypeSupplier)
         }
