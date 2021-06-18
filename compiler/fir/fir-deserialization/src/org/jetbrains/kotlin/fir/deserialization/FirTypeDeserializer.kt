@@ -73,6 +73,7 @@ class FirTypeDeserializer(
                     this.symbol = symbol
                     variance = proto.variance.convertVariance()
                     isReified = proto.reified
+                    fromTypeAlias = false
                 }
                 result[proto.id] = symbol
             }

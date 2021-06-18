@@ -133,3 +133,10 @@ FILE: upperBoundViolated.kt
         }
 
     }
+    public final class Class<V : R|kotlin/Any|> : R|kotlin/Any| {
+        public constructor<V : R|kotlin/Any|>(): R|Class<V>| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final typealias Alias<V1> = R|(Class<V1>) -> kotlin/Boolean|

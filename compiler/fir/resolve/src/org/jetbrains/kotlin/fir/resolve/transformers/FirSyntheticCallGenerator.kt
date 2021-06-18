@@ -227,6 +227,7 @@ class FirSyntheticCallGenerator(
                 symbol = typeParameterSymbol
                 variance = Variance.INVARIANT
                 isReified = false
+                fromTypeAlias = false
                 addDefaultBoundIfNecessary()
             }
 

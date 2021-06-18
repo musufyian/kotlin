@@ -482,6 +482,7 @@ object FirFakeOverrideGenerator {
                 symbol = FirTypeParameterSymbol()
                 variance = typeParameter.variance
                 isReified = typeParameter.isReified
+                fromTypeAlias = typeParameter.fromTypeAlias
                 annotations += typeParameter.annotations
             }
         }

@@ -33,6 +33,7 @@ abstract class FirTypeParameter : FirPureAbstractElement(), FirTypeParameterRef,
     abstract val variance: Variance
     abstract val isReified: Boolean
     abstract val bounds: List<FirTypeRef>
+    abstract val fromTypeAlias: Boolean
     abstract override val annotations: List<FirAnnotationCall>
 
     override fun <R, D> accept(visitor: FirVisitor<R, D>, data: D): R = visitor.visitTypeParameter(this, data)
@@ -44,6 +45,8 @@ abstract class FirTypeParameter : FirPureAbstractElement(), FirTypeParameterRef,
     abstract override fun replaceResolvePhase(newResolvePhase: FirResolvePhase)
 
     abstract fun replaceBounds(newBounds: List<FirTypeRef>)
+
+    abstract fun replaceFromTypeAlias(newFromTypeAlias: Boolean)
 
     abstract override fun <D> transformAnnotations(transformer: FirTransformer<D>, data: D): FirTypeParameter
 }

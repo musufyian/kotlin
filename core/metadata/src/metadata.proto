@@ -184,6 +184,8 @@ message TypeParameter {
   repeated Type upper_bound = 5;
   repeated int32 upper_bound_id = 6 [packed = true, (type_id_in_table) = true];
 
+  optional bool fromTypeAlias = 7 [default = false];
+
   extensions 100 to 999;
 }
 

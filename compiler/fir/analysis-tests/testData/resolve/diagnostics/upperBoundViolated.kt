@@ -62,3 +62,7 @@ class Test6<S6 : Test5<S6, in Any>>
 
 class Test7<S7 : Test7<S7, in K>, K : CharSequence>
 class Test8<S8 : Test7<S8, <!UPPER_BOUND_VIOLATED!>in Any<!>>>
+
+class Class<V : Any>
+typealias Alias <V1> = (Class<V1>) -> Boolean
+

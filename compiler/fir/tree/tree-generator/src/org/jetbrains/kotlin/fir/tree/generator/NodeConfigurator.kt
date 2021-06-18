@@ -299,6 +299,7 @@ object NodeConfigurator : AbstractFieldConfigurator<FirTreeBuilder>(FirTreeBuild
             +field(varianceType)
             +booleanField("isReified")
             +fieldList("bounds", typeRef, withReplace = true)
+            +field("fromTypeAlias", AbstractFirTreeBuilder.boolean, null, withReplace = true)
             +annotations
         }
 

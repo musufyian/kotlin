@@ -110,6 +110,7 @@ class JavaSymbolProvider(
             symbol = firSymbol
             variance = INVARIANT
             isReified = false
+            fromTypeAlias = false
             addBounds(this@toFirTypeParameter, javaTypeParameterStack)
         }.build()
     }

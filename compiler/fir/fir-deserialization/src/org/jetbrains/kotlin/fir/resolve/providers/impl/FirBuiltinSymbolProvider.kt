@@ -225,6 +225,7 @@ private class SyntheticFunctionalInterfaceCache(private val moduleData: FirModul
                                 symbol = FirTypeParameterSymbol()
                                 variance = Variance.IN_VARIANCE
                                 isReified = false
+                                fromTypeAlias = false
                                 bounds += moduleData.session.builtinTypes.nullableAnyType
                             }
                         },
@@ -238,6 +239,7 @@ private class SyntheticFunctionalInterfaceCache(private val moduleData: FirModul
                             symbol = FirTypeParameterSymbol()
                             variance = Variance.OUT_VARIANCE
                             isReified = false
+                            fromTypeAlias = false
                             bounds += moduleData.session.builtinTypes.nullableAnyType
                         },
                     )

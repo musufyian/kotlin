@@ -951,7 +951,7 @@ class DeclarationsConverter(
             when (it.tokenType) {
                 MODIFIER_LIST -> modifiers = convertModifierList(it)
                 IDENTIFIER -> identifier = it.asText
-                TYPE_PARAMETER_LIST -> firTypeParameters += convertTypeParameters(it, emptyList())
+                TYPE_PARAMETER_LIST -> firTypeParameters += convertTypeParameters(it, emptyList(), true)
                 TYPE_REFERENCE -> firType = convertType(it)
             }
         }
@@ -1601,10 +1601,14 @@ class DeclarationsConverter(
     /**
      * @see org.jetbrains.kotlin.parsing.KotlinParsing.parseTypeParameterList
      */
-    private fun convertTypeParameters(typeParameterList: LighterASTNode, typeConstraints: List<TypeConstraint>): List<FirTypeParameter> {
+    private fun convertTypeParameters(typeParameterList: LighterASTNode, typeConstraints: List<TypeConstraint>, isTypeAlias: Boolean = false): List<FirTypeParameter> {
         return typeParameterList.forEachChildrenReturnList { node, container ->
             when (node.tokenType) {
-                TYPE_PARAMETER -> container += convertTypeParameter(node, typeConstraints)
+                TYPE_PARAMETER -> {
+                    val typeParameter = convertTypeParameter(node, typeConstraints)
+                    typeParameter.replaceFromTypeAlias(isTypeAlias)
+                    container += typeParameter
+                }
             }
         }
     }
@@ -1666,6 +1670,7 @@ class DeclarationsConverter(
             symbol = FirTypeParameterSymbol()
             variance = typeParameterModifiers.getVariance()
             isReified = typeParameterModifiers.hasReified()
+            fromTypeAlias = false
             annotations += typeParameterModifiers.annotations
             firType?.let { bounds += it }
             for (typeConstraint in typeConstraints) {

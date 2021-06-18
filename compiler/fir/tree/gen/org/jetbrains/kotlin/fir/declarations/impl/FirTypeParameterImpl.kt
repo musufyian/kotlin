@@ -34,6 +34,7 @@ internal class FirTypeParameterImpl(
     override val variance: Variance,
     override val isReified: Boolean,
     override val bounds: MutableList<FirTypeRef>,
+    override var fromTypeAlias: Boolean,
     override val annotations: MutableList<FirAnnotationCall>,
 ) : FirTypeParameter() {
     init {
@@ -63,5 +64,9 @@ internal class FirTypeParameterImpl(
     override fun replaceBounds(newBounds: List<FirTypeRef>) {
         bounds.clear()
         bounds.addAll(newBounds)
+    }
+
+    override fun replaceFromTypeAlias(newFromTypeAlias: Boolean) {
+        fromTypeAlias = newFromTypeAlias
     }
 }

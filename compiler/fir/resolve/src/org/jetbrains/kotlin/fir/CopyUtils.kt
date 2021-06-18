@@ -127,6 +127,7 @@ fun FirTypeParameter.copy(
         symbol = this@copy.symbol
         variance = this@copy.variance
         isReified = this@copy.isReified
+        fromTypeAlias = this@copy.fromTypeAlias
         this.bounds += bounds
         this.annotations += annotations
     }

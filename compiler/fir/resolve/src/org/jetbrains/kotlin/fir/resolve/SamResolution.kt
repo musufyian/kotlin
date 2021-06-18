@@ -139,6 +139,7 @@ class FirSamResolverImpl(
                 this.symbol = FirTypeParameterSymbol()
                 variance = Variance.INVARIANT
                 isReified = false
+                fromTypeAlias = false
                 annotations += declaredTypeParameter.annotations
             }
         }

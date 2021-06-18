@@ -507,9 +507,11 @@ open class RawFirBuilder(
             }
         }
 
-        private fun KtTypeParameterListOwner.extractTypeParametersTo(container: FirTypeParametersOwnerBuilder) {
+        private fun KtTypeParameterListOwner.extractTypeParametersTo(container: FirTypeParametersOwnerBuilder, isTypeAlias: Boolean = false) {
             for (typeParameter in typeParameters) {
-                container.typeParameters += typeParameter.convert<FirTypeParameter>()
+                val convertedTypeParameter = typeParameter.convert<FirTypeParameter>()
+                convertedTypeParameter.replaceFromTypeAlias(isTypeAlias)
+                container.typeParameters += convertedTypeParameter
             }
         }
 
@@ -992,7 +994,7 @@ open class RawFirBuilder(
                     symbol = FirTypeAliasSymbol(context.currentClassId)
                     expandedTypeRef = typeAlias.getTypeReference().toFirOrErrorType()
                     typeAlias.extractAnnotationsTo(this)
-                    typeAlias.extractTypeParametersTo(this)
+                    typeAlias.extractTypeParametersTo(this, true)
                 }
             }
         }
@@ -1517,6 +1519,7 @@ open class RawFirBuilder(
                 symbol = FirTypeParameterSymbol()
                 variance = parameter.variance
                 isReified = parameter.hasModifier(REIFIED_KEYWORD)
+                fromTypeAlias = false
                 parameter.extractAnnotationsTo(this)
                 val extendsBound = parameter.extendsBound
                 if (extendsBound != null) {

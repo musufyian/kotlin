@@ -214,7 +214,10 @@ private fun checkUpperBoundViolated(
         }
 
         if (typeArgument != null && typeArgumentSource != null) {
-            if (!isIgnoreTypeParameters || (typeArgument.typeArguments.isEmpty() && typeArgument !is ConeTypeParameterType)) {
+            val isEffectiveIgnoreTypeParameters =
+                typeArgument is ConeTypeParameterType && typeArgument.lookupTag.symbol.fir.fromTypeAlias || isIgnoreTypeParameters
+
+            if (!isEffectiveIgnoreTypeParameters || (typeArgument.typeArguments.isEmpty() && typeArgument !is ConeTypeParameterType)) {
                 val intersection =
                     typeSystemContext.intersectTypes(typeParameterSymbols[index].fir.bounds.map { it.coneType }) as? ConeKotlinType
                 if (intersection != null) {
@@ -236,7 +239,7 @@ private fun checkUpperBoundViolated(
                 }
             }
 
-            checkUpperBoundViolated(typeArgumentTypeRef, context, reporter, isIgnoreTypeParameters = isIgnoreTypeParameters)
+            checkUpperBoundViolated(typeArgumentTypeRef, context, reporter, isIgnoreTypeParameters = isEffectiveIgnoreTypeParameters)
         }
     }
 }
