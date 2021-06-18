@@ -27,7 +27,7 @@ The Kotlin plugin provides language support in IntelliJ IDEA and Android Studio.
       <li>Parallel compilation of Kotlin sources is controlled by `--parallel` Gradle property. The `kotlin.parallel.tasks.in.project` property is deprecated.</li>
       <li>Aligned behavior of stdlib functions `isLowerCase`/`isUpperCase` and `digitToInt` across platforms.</li>
     </ul>
-    For more details, see <a href="https://kotlinlang.org/docs/whatsnew1520.html?utm_source=product&utm_medium=link">What’s New in Kotlin 1.5.20</a> and <a href="https://blog.jetbrains.com/kotlin/2021/06/kotlin-1-5-20-released/?utm_source=ide&utm_medium=change-notes&utm_campaign=1-5-20-release">this blog post</a>
+    For more details, see <a href="https://kotlinlang.org/docs/whatsnew1520.html?utm_source=ide&utm_medium=change-notes&utm_campaign=1-5-20-release">What’s New in Kotlin 1.5.20</a> and <a href="https://blog.jetbrains.com/kotlin/2021/06/kotlin-1-5-20-released/?utm_source=ide&utm_medium=change-notes&utm_campaign=1-5-20-release">this blog post</a>
     <br><br>
     <h3>1.5.10</h3>
     Released: <b>May 24, 2021</b>
