@@ -272,6 +272,9 @@ internal class PropertiesProvider private constructor(private val project: Proje
     val enableIntransitiveMetadataConfiguration: Boolean
         get() = booleanProperty("kotlin.mpp.enableIntransitiveMetadataConfiguration") ?: false
 
+    val supportMacosArmHostsInTargetShortcuts: Boolean
+        get() = booleanProperty(KOTLIN_MPP_SUPPORT_MACOS_ARM_HOST_IN_TARGET_SHORTCUTS) ?: false
+
     /**
      * Dependencies caching strategy for all targets that support caches.
      */
@@ -370,6 +373,9 @@ internal class PropertiesProvider private constructor(private val project: Proje
         private const val CACHED_PROVIDER_EXT_NAME = "kotlin.properties.provider"
 
         internal const val KOTLIN_NATIVE_IGNORE_INCORRECT_DEPENDENCIES = "kotlin.native.ignoreIncorrectDependencies"
+
+        internal const val KOTLIN_MPP_SUPPORT_MACOS_ARM_HOST_IN_TARGET_SHORTCUTS = "kotlin.mpp.supportMacosArmHostsInTargetShortcuts"
+
 
         operator fun invoke(project: Project): PropertiesProvider =
             with(project.extensions.extraProperties) {

@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.gradle.dsl
 
 import groovy.lang.Closure
+import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.TEST_COMPILATION_NAME
@@ -13,6 +14,9 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.Companion.COMMON_MAIN_SOURCE_SET_NAME
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet.Companion.COMMON_TEST_SOURCE_SET_NAME
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetContainer
+import org.jetbrains.kotlin.gradle.plugin.KotlinTargetsContainer
+import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider
+import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.Companion.KOTLIN_MPP_SUPPORT_MACOS_ARM_HOST_IN_TARGET_SHORTCUTS
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPresetFunctions, KotlinSourceSetContainer {
@@ -76,10 +80,10 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
         namePrefix: String = "ios",
         configure: KotlinNativeTarget.() -> Unit = {}
     ) {
-        val targets = listOf(
+        val targets = listOfNotNull(
             iosArm64("${namePrefix}Arm64"),
             iosX64("${namePrefix}X64"),
-            iosSimulatorArm64("${namePrefix}SimulatorArm64")
+            if (isMacosArmHostEnabled("ios")) iosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         )
         createIntermediateSourceSets(namePrefix, targets.defaultSourceSets(), mostCommonSourceSets())
         targets.forEach { it.configure() }
@@ -94,10 +98,10 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
         namePrefix: String = "tvos",
         configure: KotlinNativeTarget.() -> Unit
     ) {
-        val targets = listOf(
+        val targets = listOfNotNull(
             tvosArm64("${namePrefix}Arm64"),
             tvosX64("${namePrefix}X64"),
-            tvosSimulatorArm64("${namePrefix}SimulatorArm64")
+            if (isMacosArmHostEnabled("tvos")) tvosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         )
         createIntermediateSourceSets(namePrefix, targets.defaultSourceSets(), mostCommonSourceSets())
         targets.forEach { it.configure() }
@@ -115,7 +119,7 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
         val device32 = watchosArm32("${namePrefix}Arm32")
         val device64 = watchosArm64("${namePrefix}Arm64")
         val simulatorX64 = watchosX64("${namePrefix}X64")
-        val simulatorArm64 = watchosSimulatorArm64("${namePrefix}SimulatorArm64")
+        val simulatorArm64 = if (isMacosArmHostEnabled("watchos")) watchosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         val deviceTargets = listOf(device32, device64)
 
         val deviceSourceSets = createIntermediateSourceSets(
@@ -125,15 +129,32 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
 
         createIntermediateSourceSets(
             namePrefix,
-            listOf(deviceSourceSets, simulatorX64.defaultSourceSets(), simulatorArm64.defaultSourceSets()),
+            listOfNotNull(deviceSourceSets, simulatorX64.defaultSourceSets(), simulatorArm64?.defaultSourceSets()),
             mostCommonSourceSets()
         )
 
-        listOf(device32, device64, simulatorX64, simulatorArm64).forEach { it.configure() }
+        listOfNotNull(device32, device64, simulatorX64, simulatorArm64).forEach { it.configure() }
     }
 
     fun watchos() = watchos("watchos") { }
     fun watchos(namePrefix: String) = watchos(namePrefix) { }
     fun watchos(namePrefix: String, configure: Closure<*>) = watchos(namePrefix) { ConfigureUtil.configure(configure, this) }
     fun watchos(configure: Closure<*>) = watchos { ConfigureUtil.configure(configure, this) }
+}
+
+internal val KotlinTargetsContainer.project: Project?
+    get() = (this as? KotlinTopLevelExtension)?.project
+
+internal fun KotlinTargetContainerWithNativeShortcuts.isMacosArmHostEnabled(
+    shortcutName: String
+): Boolean {
+    val project = (this as? KotlinTopLevelExtension)?.project ?: return false
+    val enabled = PropertiesProvider(project).supportMacosArmHostsInTargetShortcuts
+    if (!enabled) {
+        project.logger.warn(
+            "Target shortcut $shortcutName() does not support Macos Arm Hosts by default\n" +
+                    "To migrate, add $KOTLIN_MPP_SUPPORT_MACOS_ARM_HOST_IN_TARGET_SHORTCUTS=true to your gradle.properties"
+        )
+    }
+    return enabled
 }
