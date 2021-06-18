@@ -159,15 +159,17 @@ internal open class CInteropCommonizerTask : AbstractCInteropCommonizerTask() {
         return supportedParameters.first()
     }
 
-    private fun CInteropCommonizationParameters.supports(
-        compilation: KotlinSharedNativeCompilation
-    ): Boolean {
-        val commonizerTargetOfCompilation = project.getCommonizerTarget(compilation) ?: return false
-        val interopsOfCompilation = project.getDependingNativeCompilations(compilation)
-            .flatMap { it.cinterops }.map { it.identifier }
+}
 
-        return targets.contains(commonizerTargetOfCompilation) && interops.containsAll(interopsOfCompilation)
-    }
+internal fun CInteropCommonizationParameters.supports(
+    compilation: KotlinSharedNativeCompilation
+): Boolean {
+    val project = compilation.project
+    val commonizerTargetOfCompilation = project.getCommonizerTarget(compilation) ?: return false
+    val interopsOfCompilation = project.getDependingNativeCompilations(compilation)
+        .flatMap { it.cinterops }.map { it.identifier }
+
+    return targets.contains(commonizerTargetOfCompilation) && interops.containsAll(interopsOfCompilation)
 }
 
 private fun CInteropProcess.toGist(): CInteropGist {
