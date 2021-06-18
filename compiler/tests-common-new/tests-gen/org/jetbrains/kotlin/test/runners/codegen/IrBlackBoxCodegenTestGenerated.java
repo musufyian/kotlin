@@ -24231,6 +24231,24 @@ public class IrBlackBoxCodegenTestGenerated extends AbstractIrBlackBoxCodegenTes
         }
 
         @Test
+        @TestMetadata("kt47328.kt")
+        public void testKt47328() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328.kt");
+        }
+
+        @Test
+        @TestMetadata("kt47328_inherited.kt")
+        public void testKt47328_inherited() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328_inherited.kt");
+        }
+
+        @Test
+        @TestMetadata("kt47328_var.kt")
+        public void testKt47328_var() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328_var.kt");
+        }
+
+        @Test
         @TestMetadata("publicField.kt")
         public void testPublicField() throws Exception {
             runTest("compiler/testData/codegen/box/jvmField/publicField.kt");

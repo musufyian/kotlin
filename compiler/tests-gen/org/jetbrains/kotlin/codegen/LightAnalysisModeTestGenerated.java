@@ -20370,6 +20370,21 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
             runTest("compiler/testData/codegen/box/jvmField/interfaceCompanionWithJava.kt");
         }
 
+        @TestMetadata("kt47328.kt")
+        public void testKt47328() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328.kt");
+        }
+
+        @TestMetadata("kt47328_inherited.kt")
+        public void testKt47328_inherited() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328_inherited.kt");
+        }
+
+        @TestMetadata("kt47328_var.kt")
+        public void testKt47328_var() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/kt47328_var.kt");
+        }
+
         @TestMetadata("publicField.kt")
         public void testPublicField() throws Exception {
             runTest("compiler/testData/codegen/box/jvmField/publicField.kt");
