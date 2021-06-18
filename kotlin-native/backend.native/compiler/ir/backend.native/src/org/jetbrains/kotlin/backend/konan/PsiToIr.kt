@@ -52,11 +52,13 @@ internal fun Context.psiToIr(
     // Note: using [llvmModuleSpecification] since this phase produces IR for generating single LLVM module.
 
     val exportedDependencies = (getExportedDependencies() + modulesWithoutDCE).distinct()
+    val functionIrClassFactory = BuiltInFictitiousFunctionIrClassFactory(
+            symbolTable, generatorContext.irBuiltIns, reflectionTypes)
     val stubGenerator = DeclarationStubGeneratorImpl(
             moduleDescriptor, symbolTable,
             config.configuration.languageVersionSettings
     )
-    val symbols = KonanSymbols(this, generatorContext.irBuiltIns, symbolTable, symbolTable.lazyWrapper)
+    val symbols by lazy { KonanSymbols(this, generatorContext.irBuiltIns, symbolTable, symbolTable.lazyWrapper) }
 
     val irDeserializer = if (isProducingLibrary && !useLinkerWhenProducingLibrary) {
         // Enable lazy IR generation for newly-created symbols inside BE
@@ -192,8 +194,8 @@ internal fun Context.psiToIr(
 
     if (!isProducingLibrary) {
         // TODO: find out what should be done in the new builtins/symbols about it
-//        if (this.stdlibModule in modulesWithoutDCE)
-//            functionIrClassFactory.buildAllClasses()
+        if (this.stdlibModule in modulesWithoutDCE)
+            functionIrClassFactory.buildAllClasses()
         internalAbi.init(irModules.values + irModule!!)
 //        functionIrClassFactory.module = (modules.values + irModule!!).single { it.descriptor.isNativeStdlib() }
     }

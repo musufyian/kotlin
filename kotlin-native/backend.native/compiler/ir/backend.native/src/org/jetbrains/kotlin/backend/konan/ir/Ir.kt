@@ -82,26 +82,28 @@ internal class KonanSymbols(
         }
     }
 
-    val integerConversions = allIntegerClasses.flatMap { fromClass ->
-        allIntegerClasses.map { toClass ->
-            val name = Name.identifier("to${toClass.owner.name.asString().replaceFirstChar(Char::uppercaseChar)}")
-            val symbol = if (fromClass in signedIntegerClasses && toClass in unsignedIntegerClasses) {
-                irBuiltIns.findFunctions(name, "kotlin")
-                        .single {
-                            it.owner.dispatchReceiverParameter == null &&
-                                    it.owner.extensionReceiverParameter?.type == fromClass.defaultType &&
-                                    it.owner.valueParameters.isEmpty()
-                        }
-            } else {
-                irBuiltIns.findBuiltInClassMemberFunctions(fromClass, name)
-                        .single {
-                            it.owner.extensionReceiverParameter == null && it.owner.valueParameters.isEmpty()
-                        }
-            }
+    val integerConversions by lazy {
+        allIntegerClasses.flatMap { fromClass ->
+            allIntegerClasses.map { toClass ->
+                val name = Name.identifier("to${toClass.owner.name.asString().replaceFirstChar(Char::uppercaseChar)}")
+                val symbol = if (fromClass in signedIntegerClasses && toClass in unsignedIntegerClasses) {
+                    irBuiltIns.findFunctions(name, "kotlin")
+                            .single {
+                                it.owner.dispatchReceiverParameter == null &&
+                                        it.owner.extensionReceiverParameter?.type == fromClass.defaultType &&
+                                        it.owner.valueParameters.isEmpty()
+                            }
+                } else {
+                    irBuiltIns.findBuiltInClassMemberFunctions(fromClass, name)
+                            .single {
+                                it.owner.extensionReceiverParameter == null && it.owner.valueParameters.isEmpty()
+                            }
+                }
 
-            (fromClass to toClass) to symbol
-        }
-    }.toMap()
+                (fromClass to toClass) to symbol
+            }
+        }.toMap()
+    }
 
     val arrayList = symbolTable.referenceClass(getArrayListClassDescriptor(context))
 
@@ -280,14 +282,19 @@ internal class KonanSymbols(
     val getProgressionLast = context.getKonanInternalFunctions("getProgressionLast")
             .map { Pair(it.returnType, symbolTable.referenceSimpleFunction(it)) }.toMap()
 
-    val arrayContentToString = arrays.associateBy(
-            { it },
-            { findArrayExtension(it, "contentToString") }
-    )
-    val arrayContentHashCode = arrays.associateBy(
-            { it },
-            { findArrayExtension(it, "contentHashCode") }
-    )
+    val arrayContentToString by lazy {
+        arrays.associateBy(
+                { it },
+                { findArrayExtension(it, "contentToString") }
+        )
+    }
+
+    val arrayContentHashCode by lazy {
+        arrays.associateBy(
+                { it },
+                { findArrayExtension(it, "contentHashCode") }
+        )
+    }
 
     private fun findArrayExtension(classSymbol: IrClassSymbol, name: String): IrSimpleFunctionSymbol =
             irBuiltIns.findFunctions(Name.identifier(name), "kotlin", "collections")
@@ -308,14 +315,16 @@ internal class KonanSymbols(
         return symbolTable.referenceFunction(descriptor)
     }
     
-    val copyInto = arrays.map { symbol ->
-        val funSymbol = irBuiltIns.findFunctions(Name.identifier("copyInto"), StandardNames.COLLECTIONS_PACKAGE_FQ_NAME)
-                .single {
-                    !it.owner.isExpect &&
-                            it.owner.extensionReceiverParameter?.type?.classOrNull == symbol.owner
-                }
-        symbol to funSymbol
-    }.toMap()
+    val copyInto by lazy {
+        arrays.map { symbol ->
+            val funSymbol = irBuiltIns.findFunctions(Name.identifier("copyInto"), StandardNames.COLLECTIONS_PACKAGE_FQ_NAME)
+                    .single {
+                        !it.owner.isExpect &&
+                                it.owner.extensionReceiverParameter?.type?.classOrNull == symbol.owner
+                    }
+            symbol to funSymbol
+        }.toMap()
+    }
 
     val arrayGet = arrays.associateWith { it.descriptor.unsubstitutedMemberScope
             .getContributedFunctions(Name.identifier("get"), NoLookupLocation.FROM_BACKEND)
@@ -341,13 +350,15 @@ internal class KonanSymbols(
 
     val freeze = irBuiltIns.findFunctions(Name.identifier("freeze"), "kotlin", "native", "concurrent").single()
 
-    val println =
-            irBuiltIns.findFunctions(Name.identifier("println"), "kotlin", "io")
-                    .single { it.owner.valueParameters.singleOrNull()?.type == irBuiltIns.stringType }
+    val println by lazy {
+        irBuiltIns.findFunctions(Name.identifier("println"), "kotlin", "io")
+                .single { it.owner.valueParameters.singleOrNull()?.type == irBuiltIns.stringType }
+    }
 
-    val anyNToString =
-            irBuiltIns.findFunctions(Name.identifier("toString"))
-                    .single { it.owner.extensionReceiverParameter?.type == irBuiltIns.anyNType}
+    val anyNToString by lazy {
+        irBuiltIns.findFunctions(Name.identifier("toString"))
+                .single { it.owner.extensionReceiverParameter?.type == irBuiltIns.anyNType }
+    }
 
     override val getContinuation = internalFunction("getContinuation")
 
@@ -398,11 +409,12 @@ internal class KonanSymbols(
 
     val kotlinResult = irBuiltIns.findClass(Name.identifier("Result"))!!
 
-    val kotlinResultGetOrThrow =
-            irBuiltIns.findFunctions(Name.identifier("getOrThrow"))
-                    .single {
-                        it.owner.extensionReceiverParameter?.type?.classOrNull == kotlinResult.owner
-                    }
+    val kotlinResultGetOrThrow by lazy {
+        irBuiltIns.findFunctions(Name.identifier("getOrThrow"))
+                .single {
+                    it.owner.extensionReceiverParameter?.type?.classOrNull == kotlinResult.owner
+                }
+    }
 
     override val functionAdapter = symbolTable.referenceClass(context.getKonanInternalClass("FunctionAdapter"))
 
@@ -472,13 +484,15 @@ internal class KonanSymbols(
         )
     }
 
-    val emptyList =
-            irBuiltIns.findFunctions(Name.identifier("emptyList"), "kotlin", "collections")
-                    .single { it.owner.valueParameters.isEmpty() }
+    val emptyList by lazy {
+        irBuiltIns.findFunctions(Name.identifier("emptyList"), "kotlin", "collections")
+                .single { it.owner.valueParameters.isEmpty() }
+    }
 
-    val listOf =
-            irBuiltIns.findFunctions(Name.identifier("listOf"), "kotlin", "collections")
-                    .single { it.owner.valueParameters.size == 1 && it.owner.valueParameters[0].isVararg }
+    val listOf by lazy {
+        irBuiltIns.findFunctions(Name.identifier("listOf"), "kotlin", "collections")
+                .single { it.owner.valueParameters.size == 1 && it.owner.valueParameters[0].isVararg }
+    }
 
     val listOfInternal = internalFunction("listOfInternal")
 

@@ -66,13 +66,13 @@ internal class BuiltInFictitiousFunctionIrClassFactory(
 
     fun buildAllClasses() {
         // TODO find out whether and how to do it with the new builtins
-//        val maxArity = 255 // See [BuiltInFictitiousFunctionClassFactory].
-//        (0 .. maxArity).forEach { arity ->
-//            functionN(arity)
-//            kFunctionN(arity)
-//            suspendFunctionN(arity)
-//            kSuspendFunctionN(arity)
-//        }
+        val maxArity = 255 // See [BuiltInFictitiousFunctionClassFactory].
+        (0 .. maxArity).forEach { arity ->
+            irBuiltIns.functionN(arity)
+            irBuiltIns.kFunctionN(arity)
+            irBuiltIns.suspendFunctionN(arity)
+            irBuiltIns.kSuspendFunctionN(arity)
+        }
     }
 
     private val functionSymbol = irBuiltIns.findClass(KonanFqNames.function.shortName(), KonanFqNames.function.parent())!!

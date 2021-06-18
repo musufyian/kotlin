@@ -432,7 +432,7 @@ class OperatorExpressionGenerator(statementGenerator: StatementGenerator) : Stat
         return memberScope.findSingleFunction(Name.identifier("to$targetTypeName"))
     }
 
-    private val primitiveTypeMapping = context.irBuiltInsOverDescriptors.run { primitiveTypes.zip(primitiveIrTypes).toMap() }
+    private val primitiveTypeMapping: Map<SimpleType, IrType> = context.irBuiltInsOverDescriptors.run { primitiveTypes.zip(primitiveIrTypes).toMap() }
     private fun kotlinTypeToIrType(kotlinType: KotlinType?) = kotlinType?.let { primitiveTypeMapping[it] }
 
     private fun generateComparisonOperator(ktExpression: KtBinaryExpression, origin: IrStatementOrigin): IrExpression {
