@@ -82,7 +82,7 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
     ) {
         val targets = listOfNotNull(
             iosArm64("${namePrefix}Arm64"),
-            iosX64("${namePrefix}X64"),
+            iosSimulatorX64("${namePrefix}SimulatorX64"),
             if (isMacosArmHostEnabled("ios")) iosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         )
         createIntermediateSourceSets(namePrefix, targets.defaultSourceSets(), mostCommonSourceSets())
@@ -100,7 +100,7 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
     ) {
         val targets = listOfNotNull(
             tvosArm64("${namePrefix}Arm64"),
-            tvosX64("${namePrefix}X64"),
+            tvosSimulatorX64("${namePrefix}X64"),
             if (isMacosArmHostEnabled("tvos")) tvosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         )
         createIntermediateSourceSets(namePrefix, targets.defaultSourceSets(), mostCommonSourceSets())
@@ -118,7 +118,7 @@ interface KotlinTargetContainerWithNativeShortcuts : KotlinTargetContainerWithPr
     ) {
         val device32 = watchosArm32("${namePrefix}Arm32")
         val device64 = watchosArm64("${namePrefix}Arm64")
-        val simulatorX64 = watchosX64("${namePrefix}X64")
+        val simulatorX64 = watchosSimulatorX64("${namePrefix}X64")
         val simulatorArm64 = if (isMacosArmHostEnabled("watchos")) watchosSimulatorArm64("${namePrefix}SimulatorArm64") else null
         val deviceTargets = listOf(device32, device64)
 

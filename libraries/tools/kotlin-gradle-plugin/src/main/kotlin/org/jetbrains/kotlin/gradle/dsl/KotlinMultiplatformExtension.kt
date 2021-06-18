@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.*
 open class KotlinMultiplatformExtension(project: Project) :
     KotlinProjectExtension(project),
     KotlinTargetContainerWithPresetFunctions,
+    KotlinTargetContainerWithDeprecatedPresetFunctions,
     KotlinTargetContainerWithJsPresetFunctions,
     KotlinTargetContainerWithNativeShortcuts {
     override lateinit var presets: NamedDomainObjectCollection<KotlinTargetPreset<*>>

@@ -138,20 +138,20 @@ interface KotlinTargetContainerWithPresetFunctions : KotlinTargetsContainerWithP
     fun iosArm64(name: String, configure: Closure<*>) = iosArm64(name) { ConfigureUtil.configure(configure, this) }
     fun iosArm64(configure: Closure<*>) = iosArm64 { ConfigureUtil.configure(configure, this) }
 
-    fun iosX64(
-        name: String = "iosX64",
+    fun iosSimulatorX64(
+        name: String = "iosSimulatorX64",
         configure: KotlinNativeTargetWithSimulatorTests.() -> Unit = { }
     ): KotlinNativeTargetWithSimulatorTests =
         configureOrCreate(
             name,
-            presets.getByName("iosX64") as KotlinNativeTargetWithSimulatorTestsPreset,
+            presets.getByName("iosSimulatorX64") as KotlinNativeTargetWithSimulatorTestsPreset,
             configure
         )
 
-    fun iosX64() = iosX64("iosX64") { }
-    fun iosX64(name: String) = iosX64(name) { }
-    fun iosX64(name: String, configure: Closure<*>) = iosX64(name) { ConfigureUtil.configure(configure, this) }
-    fun iosX64(configure: Closure<*>) = iosX64 { ConfigureUtil.configure(configure, this) }
+    fun iosSimulatorX64() = iosSimulatorX64("iosSimulatorX64") { }
+    fun iosSimulatorX64(name: String) = iosSimulatorX64(name) { }
+    fun iosSimulatorX64(name: String, configure: Closure<*>) = iosSimulatorX64(name) { ConfigureUtil.configure(configure, this) }
+    fun iosSimulatorX64(configure: Closure<*>) = iosSimulatorX64 { ConfigureUtil.configure(configure, this) }
 
     fun iosSimulatorArm64(
         name: String = "iosSimulatorArm64",
@@ -213,20 +213,20 @@ interface KotlinTargetContainerWithPresetFunctions : KotlinTargetsContainerWithP
     fun watchosX86(name: String, configure: Closure<*>) = watchosX86(name) { ConfigureUtil.configure(configure, this) }
     fun watchosX86(configure: Closure<*>) = watchosX86 { ConfigureUtil.configure(configure, this) }
 
-    fun watchosX64(
-        name: String = "watchosX64",
+    fun watchosSimulatorX64(
+        name: String = "watchosSimulatorX64",
         configure: KotlinNativeTargetWithSimulatorTests.() -> Unit = { }
     ): KotlinNativeTargetWithSimulatorTests =
         configureOrCreate(
             name,
-            presets.getByName("watchosX64") as KotlinNativeTargetWithSimulatorTestsPreset,
+            presets.getByName("watchosSimulatorX64") as KotlinNativeTargetWithSimulatorTestsPreset,
             configure
         )
 
-    fun watchosX64() = watchosX64("watchosX64") { }
-    fun watchosX64(name: String) = watchosX64(name) { }
-    fun watchosX64(name: String, configure: Closure<*>) = watchosX64(name) { ConfigureUtil.configure(configure, this) }
-    fun watchosX64(configure: Closure<*>) = watchosX64 { ConfigureUtil.configure(configure, this) }
+    fun watchosSimulatorX64() = watchosSimulatorX64("watchosSimulatorX64") { }
+    fun watchosSimulatorX64(name: String) = watchosSimulatorX64(name) { }
+    fun watchosSimulatorX64(name: String, configure: Closure<*>) = watchosSimulatorX64(name) { ConfigureUtil.configure(configure, this) }
+    fun watchosSimulatorX64(configure: Closure<*>) = watchosSimulatorX64 { ConfigureUtil.configure(configure, this) }
 
     fun watchosSimulatorArm64(
         name: String = "watchosSimulatorArm64",
@@ -258,20 +258,20 @@ interface KotlinTargetContainerWithPresetFunctions : KotlinTargetsContainerWithP
     fun tvosArm64(name: String, configure: Closure<*>) = tvosArm64(name) { ConfigureUtil.configure(configure, this) }
     fun tvosArm64(configure: Closure<*>) = tvosArm64 { ConfigureUtil.configure(configure, this) }
 
-    fun tvosX64(
-        name: String = "tvosX64",
+    fun tvosSimulatorX64(
+        name: String = "tvosSimulatorX64",
         configure: KotlinNativeTargetWithSimulatorTests.() -> Unit = { }
     ): KotlinNativeTargetWithSimulatorTests =
         configureOrCreate(
             name,
-            presets.getByName("tvosX64") as KotlinNativeTargetWithSimulatorTestsPreset,
+            presets.getByName("tvosSimulatorX64") as KotlinNativeTargetWithSimulatorTestsPreset,
             configure
         )
 
-    fun tvosX64() = tvosX64("tvosX64") { }
-    fun tvosX64(name: String) = tvosX64(name) { }
-    fun tvosX64(name: String, configure: Closure<*>) = tvosX64(name) { ConfigureUtil.configure(configure, this) }
-    fun tvosX64(configure: Closure<*>) = tvosX64 { ConfigureUtil.configure(configure, this) }
+    fun tvosSimulatorX64() = tvosSimulatorX64("tvosSimulatorX64") { }
+    fun tvosSimulatorX64(name: String) = tvosSimulatorX64(name) { }
+    fun tvosSimulatorX64(name: String, configure: Closure<*>) = tvosSimulatorX64(name) { ConfigureUtil.configure(configure, this) }
+    fun tvosSimulatorX64(configure: Closure<*>) = tvosSimulatorX64 { ConfigureUtil.configure(configure, this) }
 
     fun tvosSimulatorArm64(
         name: String = "tvosSimulatorArm64",
