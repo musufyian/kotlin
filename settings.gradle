@@ -475,7 +475,6 @@ if (!buildProperties.getBoolean("disableKotlinPluginModules", false) && attached
             ":idea:idea-frontend-fir:idea-frontend-fir-generator",
             ":idea:idea-fir-performance-tests",
             ":plugins:lint", // TODO will this module be removed with other IDE modules?
-            ":compiler:android-tests", // TODO will this module be removed with other IDE modules?
             ":plugins:android-extensions-ide", // TODO will this module be removed with other IDE modules?
             ":prepare:ide-lazy-resolver", // TODO will this module be removed with other IDE modules?
             ":prepare:idea-plugin", // TODO will this module be removed with other IDE modules?
@@ -497,6 +496,8 @@ if (!buildProperties.getBoolean("disableKotlinPluginModules", false) && attached
 } else {
     logger.info("Old Kotlin plugin modules are disabled")
 }
+
+
 
 if (buildProperties.inJpsBuildIdeaSync) {
     include ":kotlin-stdlib:jps-build"
@@ -543,7 +544,7 @@ if (buildProperties.inJpsBuildIdeaSync) {
     project(':kotlin-test:kotlin-test-js:kotlin-test-js-it').projectDir = "$rootDir/libraries/kotlin.test/js/it" as File
 }
 
-rootProject.name = "kotlin"
+include ":compiler:android-tests"
 
 project(':kotlin-script-runtime').projectDir = "$rootDir/libraries/tools/script-runtime" as File
 project(':kotlin-test:kotlin-test-common').projectDir = "$rootDir/libraries/kotlin.test/common" as File
